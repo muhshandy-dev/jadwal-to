@@ -1,0 +1,12 @@
+{
+  "name": "tryout-skd",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pengatur jadwal 120 tryout SKD CPNS (PWA statis, tanpa backend)",
+  "scripts": {
+    "test:logic": "node tests/logic.test.js",
+    "test:e2e": "node tests/e2e.test.js",
+    "serve": "npx --yes serve -l 8080 ."
+  },
+  "devDependencies": { "playwright": "^1.50.0" }
+}

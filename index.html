@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tryout SKD</title>
+  <meta name="description" content="Pengatur jadwal 120 tryout SKD CPNS: checklist, skor, tren, dan buku soal salah. Bisa offline.">
+  <meta name="theme-color" content="#f4f6f8">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tryout SKD">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <noscript><p style="padding:16px">Aplikasi ini membutuhkan JavaScript.</p></noscript>
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="bottom" aria-label="Navigasi utama">
+    <a href="#/hari-ini"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg><span>Hari Ini</span></a>
+    <a href="#/kalender"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Kalender</span></a>
+    <a href="#/skor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span>Skor</span></a>
+    <a href="#/catatan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/></svg><span>Catatan</span></a>
+    <a href="#/pengaturan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Pengaturan</span></a>
+  </nav>
+
+  <dialog id="sheet" aria-label="Detail"><div id="sheet-body"></div></dialog>
+  <dialog id="confirm" aria-labelledby="confirm-t">
+    <form method="dialog"><h2 id="confirm-t"></h2><p></p><div class="btns"><button class="btn" value="cancel">Batal</button><button class="btn bad" value="ok"></button></div></form>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="schedule.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

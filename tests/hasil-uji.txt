@@ -1,0 +1,154 @@
+K1 jumlah dan periode
+  ok   total tepat 120, ID unik
+  ok   tiap minggu tepat 12 (10 minggu)
+  ok   minggu 1 mulai Senin 2026-11-23, minggu 10 berakhir Minggu 2027-01-31
+  ok   kalender sama dengan PDF (rentang tiap minggu)
+K2 templat harian
+  ok   Senin-Kamis: 1 TO
+  ok   Jumat: 2 TO
+  ok   Sabtu: 4 TO
+  ok   Minggu: 2 TO + baca ulang 19.30-20.00
+  ok   hari di luar program tidak punya kegiatan (minggu tenang)
+K3 geser tryout
+  ok   25 Des 2026 dan 1 Jan 2027 jatuh Jumat, libur, masing-masing 2 TO
+  ok   geser ke hari lain di minggu yang sama: berhasil, total tetap 120 dan tiap minggu 12
+  ok   geser ke minggu lain ditolak
+  ok   2000 geseran acak tidak pernah mengubah total 120 atau 12 per minggu
+  ok   tryout yang digeser ke hari padat mendapat slot tambahan tanpa tabrakan; kembalikan ke jadwal awal
+  ok   jam mulai kustom, dan bentrok ditandai
+  ok   Sabtu dengan TO ke-5 dan ke-6: slot malam lalu jam fleksibel
+K6/K7 skor, ambang, progres
+  ok   total otomatis dan lulus per subtes (default 65/80/166)
+  ok   ambang bisa diubah
+  ok   skor di luar batas ditolak (TWK maks 150, TIU 175, TKP 225)
+  ok   progres per minggu x/12 dan total x/120
+  ok   hitung mundur SKD (default 8 Feb 2027)
+K8/K9 terlewat dan paket dobel
+  ok   terlewat: belum selesai dan tanggal lewat; hilang bila digeser ke depan atau selesai
+  ok   paket dobel: huruf besar, spasi, tanda baca diabaikan
+  ok   libur belum digeser terdeteksi; tryout pada/atau setelah tanggal SKD terdeteksi
+K10 tren dan skor mentok
+  ok   rata-rata per minggu
+  ok   mentok: rata-rata tidak naik dua minggu berturut-turut
+  ok   tidak mentok bila ada kenaikan; tidak dicek bila minggu tidak berurutan atau data < 3 tryout
+K15 ekspor/impor
+  ok   ekspor lalu impor menghasilkan state identik
+  ok   impor menolak JSON rusak, berkas asing, versi lain, dan membersihkan data berbahaya
+K4 waktu WITA dan hitung mundur
+  ok   WITA = UTC+8
+  ok   kegiatan berjalan dan berikutnya (Senin 19.30 WITA)
+  ok   jeda antar kegiatan, lewat tengah malam, dan sebelum program dimulai
+
+32 tes lulus
+
+K4 Hari Ini (Senin 23 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
+  ok    tanggal ditampilkan dalam WITA
+  ok    kegiatan berjalan disorot: Tryout 19.00–20.40
+  ok    timeline Senin punya 4 kegiatan
+  ok    hitung mundur ke kegiatan berikutnya (Pembahasan 20.50), kira-kira 01:20:00
+  ok    hitung mundur berkurang tiap detik
+  ok    SKD H-77 dan progres 0/120
+  ok    setelah 81 menit, sorotan pindah ke Pembahasan
+  ok    tanpa galat konsol
+K5/K14/K9 checklist, skor, persistensi, paket dobel
+  ok    centang selesai di timeline menaikkan progres ke 1/120
+  ok    total dihitung otomatis 319
+  ok    lulus/tidak per subtes: TWK ✓, TIU ✗, TKP ✓
+  ok    skor di luar batas ditolak dengan pesan
+  ok    TIU 80 = lulus (batas tepat)
+  ok    data tetap ada setelah reload (localStorage)
+  ok    daftar skor memuat nilai setelah reload
+  ok    peringatan paket dobel di dalam sheet
+  ok    peringatan paket dobel di halaman Skor
+K3/K8 geser tryout Natal dan peringatan terlewat
+  ok    peringatan Natal muncul sebelum hari H
+  ok    terlewat: ada tryout minggu-minggu lalu yang belum selesai
+  ok    Jumat 25 Des punya 2 tryout
+  ok    pilihan geser hanya 7 hari di minggu yang sama (21–27 Des)
+  ok    toast konfirmasi geser
+  ok    setelah geser: total tetap 120, tiap minggu 12, tryout bertanda digeser
+  ok    peringatan Natal tinggal 1 tryout
+  ok    peringatan Natal hilang setelah kedua tryout digeser
+  ok    kalender menandai libur Natal dan tryout digeser (↔)
+  ok    kembalikan ke jadwal awal (Jumat 25 Des)
+  ok    Jumat 1 Jan 2027: 2 tryout, bisa digeser ke Kamis 31 Des atau Sabtu 2 Jan, tidak ke Senin 4 Jan
+K10/K12/K15 tren, kalender, ekspor dan impor JSON
+  ok    skor mentok TWK terdeteksi (62,63→? minggu 1-3 tidak naik dua kali)
+  ok    TKP naik: tidak ada peringatan mentok TKP
+  ok    grafik SVG tergambar dengan garis ambang
+  ok    tabel rata-rata per minggu untuk 3 minggu
+  ok    ekspor: nama berkas dan JSON valid
+  ok    ekspor memuat state yang sama dengan localStorage
+  ok    impor berkas rusak ditolak dengan pesan
+  ok    impor berkas asing ditolak
+  ok    data tidak berubah setelah impor gagal
+  ok    reset dibatalkan: data tetap
+  ok    reset dengan konfirmasi menghapus semua data
+  ok    dialog impor menyebut jumlah data
+  ok    impor memulihkan data persis seperti sebelum reset
+K11/K20 buku soal salah, pengingat Minggu 19.30, XSS
+  ok    Minggu 19.30: pengingat Baca ulang buku soal salah sedang berjalan
+  ok    dua catatan tersimpan
+  ok    XSS: HTML ditampilkan sebagai teks, tidak dieksekusi
+  ok    filter subtes TKP menyisakan 1 catatan
+  ok    filter topik Pancasila menyisakan 1 catatan
+  ok    tombol sudah dibaca ulang mencatat 1×
+  ok    catatan tetap ada setelah reload
+  ok    ubah catatan
+  ok    hapus catatan dengan konfirmasi
+  ok    XSS lewat nama paket tidak dieksekusi
+K13 pengaturan: SKD, ambang, tema
+  ok    ubah tanggal SKD ke 15 Feb: hitung mundur H-84
+  ok    SKD sebelum tryout terakhir memunculkan peringatan
+  ok    ambang tidak valid dikembalikan ke nilai lama (80)
+  ok    mode gelap menerapkan data-theme
+  ok    warna latar berbeda antara gelap dan terang
+  ok    pengaturan bertahan setelah reload
+K16 layout 375 px
+  ok    #/hari-ini: tanpa scroll horizontal
+  ok    #/hari-ini: semua tombol/input minimal 44 px tinggi
+  ok    #/kalender: tanpa scroll horizontal
+  ok    #/kalender: semua tombol/input minimal 44 px tinggi
+  ok    #/skor: tanpa scroll horizontal
+  ok    #/skor: semua tombol/input minimal 44 px tinggi
+  ok    #/catatan: tanpa scroll horizontal
+  ok    #/catatan: semua tombol/input minimal 44 px tinggi
+  ok    #/pengaturan: tanpa scroll horizontal
+  ok    #/pengaturan: semua tombol/input minimal 44 px tinggi
+  ok    navigasi bawah: Hari Ini, Kalender, Skor, Catatan, Pengaturan
+  ok    sheet detail tanpa scroll horizontal
+  ok    320 px #/hari-ini: tanpa scroll horizontal
+  ok    320 px #/kalender: tanpa scroll horizontal
+  ok    320 px #/skor: tanpa scroll horizontal
+  ok    320 px #/catatan: tanpa scroll horizontal
+  ok    320 px #/pengaturan: tanpa scroll horizontal
+K18 notifikasi (izin diberikan dan ditolak)
+  ok    izin diberikan: pengingat aktif
+  ok    notifikasi muncul 5 menit sebelum Tryout 19.00
+  ok    tidak dikirim dobel
+  ok    izin ditolak/tidak ada: pengingat tetap nonaktif, aplikasi tetap berfungsi
+  ok    Hari Ini tetap tampil tanpa notifikasi
+Ketahanan: localStorage rusak
+  ok    data rusak: aplikasi tetap jalan dengan data baru dan cadangan disimpan
+K17 PWA: manifest, service worker, offline
+  ok    manifest valid: standalone, ikon 192/512/maskable, start_url relatif
+  ok    ikon icons/icon-192.png dapat dimuat
+  ok    ikon icons/icon-512.png dapat dimuat
+  ok    ikon icons/icon-maskable-512.png dapat dimuat
+  ok    ikon icons/icon.svg dapat dimuat
+  ok    service worker aktif dengan scope akar situs
+  ok    halaman dikendalikan service worker setelah muat ulang
+  ok    cangkang aplikasi ter-cache
+  ok    OFFLINE: halaman tetap termuat setelah reload
+  ok    OFFLINE: data lokal tetap ada (1/120)
+  ok    OFFLINE: kalender 10 minggu tampil
+  ok    OFFLINE: menambah catatan berfungsi
+  ok    OFFLINE: berkas aplikasi dilayani dari cache
+  ok    status offline di Pengaturan: siap
+K19 subpath (GitHub Pages: /nama-repo/)
+  ok    service worker ter-scope di subpath
+  ok    tidak ada permintaan 404 di subpath
+  ok    offline di subpath berfungsi
+  ok    tanpa galat konsol di subpath
+
+98 pemeriksaan lulus, 0 gagal
