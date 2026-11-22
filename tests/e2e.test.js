@@ -75,14 +75,22 @@ function seedState() {
   }
   const closeSheet = async page => { await page.click('[data-act=close-sheet]'); await page.waitForFunction(() => !document.getElementById('sheet').open); await page.waitForTimeout(80); };
   const shot = (page, name) => page.screenshot({ path: path.join(SHOTS, name + '.png') });
-  const go = async (page, h) => { await page.evaluate(h => { location.hash = h; }, h); await page.waitForTimeout(60); };
+  const ROUTE_MAP = { '#/hari-ini': '#/tryout', '#/kalender': '#/tryout', '#/skor': '#/tryout', '#/catatan': '#/rekap', '#/rekap-salah': '#/rekap' };
+  const go = async (page, h) => {
+    const target = ROUTE_MAP[h] || h;
+    await page.evaluate(x => { location.hash = x; }, target); await page.waitForTimeout(80);
+    if (target === '#/tryout') await page.evaluate(() => document.querySelectorAll('details.week[data-w]').forEach(d => { d.open = true; }));
+    if (target === '#/rekap') await page.click(h === '#/catatan' || h === '#/rekap-salah' ? '[data-tab=salah]' : '[data-tab=skor]');
+    await page.waitForTimeout(40);
+  };
+  const toWeeks = page => page.locator('#view h2:has-text("Semua minggu")').evaluate(e => e.scrollIntoView());
   const stateOf = page => page.evaluate(() => JSON.parse(localStorage.getItem('tryoutSkd.v1')));
 
   // ---------------------------------------------------------------- K4 Hari Ini
   console.log('K4 Hari Ini (Senin 23 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)');
   {
     const { ctx, page, errors } = await open('2026-11-23T11:30:00Z');
-    const head = await page.textContent('.page-h');
+    const head = await page.textContent('#view');
     check('tanggal ditampilkan dalam WITA', /Senin, 23 November 2026/.test(head), head);
     const nowTxt = await page.textContent('.ev.now');
     check('kegiatan berjalan disorot: Tryout 19.00–20.40', /19\.00–20\.40/.test(nowTxt) && /Tryout/.test(nowTxt) && /sedang berjalan/.test(nowTxt), nowTxt);
@@ -129,7 +137,7 @@ function seedState() {
     await page.fill('#f-name', '  bimbel a – paket 1 ');
     check('peringatan paket dobel di dalam sheet', /juga dipakai di tryout #1/.test(await page.textContent('#dup')));
     await closeSheet(page);
-    await go(page, '#/skor'); await page.click('[data-tab=tren]');
+    await go(page, '#/rekap');
     check('peringatan paket dobel di halaman Skor', /Paket dobel/.test(await page.textContent('#view')));
     await ctx.close();
   }
@@ -139,8 +147,8 @@ function seedState() {
   {
     const { ctx, page } = await open('2026-12-21T04:00:00Z'); // Senin 21 Des 12.00 WITA
     const warn = await page.textContent('.warn:has-text("Natal")');
-    check('peringatan Natal muncul sebelum hari H', /Hari Raya Natal/.test(warn) && /Jumat, 25 Desember 2026/.test(warn), warn);
-    check('terlewat: ada tryout minggu-minggu lalu yang belum selesai', /terlewat dan belum dijadwalkan ulang/.test(await page.textContent('#view')));
+    check('peringatan Natal muncul sebelum hari H', /Hari Raya Natal/.test(warn) && /Jum 25 Des/.test(warn), warn);
+    check('terlewat: ada tryout minggu-minggu lalu yang belum selesai', /tryout terlewat/.test(await page.textContent('#view')));
     const natal = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts);
     check('Jumat 25 Des punya 2 tryout', natal.length === 2, natal);
     await page.click('.warn:has-text("Natal") [data-open="' + natal[0] + '"]');
@@ -152,7 +160,7 @@ function seedState() {
     await closeSheet(page);
     let counts = await page.evaluate(id0 => { const l = Sked.tryoutList(__app.state), c = {}; l.forEach(t => { c[t.week] = (c[t.week] || 0) + 1; }); return { n: l.length, c: Object.values(c), moved: Sked.getTryout(__app.state, id0).moved }; }, natal[0]);
     check('setelah geser: total tetap 120, tiap minggu 12, tryout bertanda digeser', counts.n === 120 && counts.c.length === 10 && counts.c.every(x => x === 12) && counts.moved, counts);
-    check('peringatan Natal tinggal 1 tryout', (await page.textContent('.warn:has-text("Natal")')).match(/1 tryout hari itu/) !== null);
+    check('peringatan Natal tinggal 1 tryout', (await page.textContent('.warn:has-text("Natal")')).match(/: 1 tryout bisa digeser/) !== null);
     await page.click('.warn:has-text("Natal") [data-open]');
     await page.selectOption('#f-date', '2026-12-23');
     await page.fill('#f-time', '08:00');
@@ -161,7 +169,7 @@ function seedState() {
     check('peringatan Natal hilang setelah kedua tryout digeser', (await page.locator('.warn:has-text("Natal")').count()) === 0);
     await go(page, '#/kalender');
     const cal = await page.textContent('details.week[data-w="5"]');
-    check('kalender menandai libur Natal dan tryout digeser (↔)', /Hari Raya Natal/.test(cal) && /↔/.test(cal), cal.slice(0, 200));
+    check('minggu 5 memuat catatan Natal dan tryout yang digeser bertanda ↔', /Natal/.test(cal) && /↔/.test(cal), cal.slice(0, 200));
     await page.click('details[data-w="5"] [data-open="' + natal[1] + '"]');
     await page.click('[data-act=unmove]');
     check('kembalikan ke jadwal awal (Jumat 25 Des)', (await page.evaluate(id => Sked.getTryout(__app.state, id).date, natal[1])) === '2026-12-25');
@@ -176,10 +184,9 @@ function seedState() {
   console.log('K10/K12/K15 tren, kalender, ekspor dan impor JSON');
   {
     const { ctx, page } = await open('2026-12-12T02:00:00Z', { seed: true }); // Sabtu 12 Des 10.00 WITA
-    await shot(page, '01-hari-ini-375');
-    await go(page, '#/kalender'); await page.waitForTimeout(100); await shot(page, '02-kalender-375');
-    await go(page, '#/skor'); await shot(page, '03-skor-daftar-375');
-    await page.click('[data-tab=tren]');
+    await shot(page, '01-tryout-hari-ini-375');
+    await go(page, '#/tryout'); await toWeeks(page); await page.waitForTimeout(100); await shot(page, '02-tryout-minggu-375');
+    await page.evaluate(() => window.scrollTo(0, 0)); await go(page, '#/rekap');
     const trenTxt = await page.textContent('#view');
     check('skor mentok TWK terdeteksi (62,63→? minggu 1-3 tidak naik dua kali)', /Skor mentok: rata-rata TWK/.test(trenTxt), trenTxt.slice(0, 300));
     check('TKP naik: tidak ada peringatan mentok TKP', !/Skor mentok: rata-rata TKP/.test(trenTxt));
@@ -188,7 +195,7 @@ function seedState() {
     check('tabel rata-rata per minggu untuk 3 minggu', rows === 3, rows);
     await shot(page, '04-skor-tren-twk-375');
     await page.click('[data-series=tkp]'); await shot(page, '05-skor-tren-tkp-375');
-    await go(page, '#/catatan'); await shot(page, '06-catatan-375');
+    await go(page, '#/catatan'); await shot(page, '06-rekap-soal-salah-375');
     await go(page, '#/pengaturan'); await shot(page, '07-pengaturan-375');
     // ekspor
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-act=export]')]);
@@ -252,6 +259,7 @@ function seedState() {
     check('tombol sudah dibaca ulang mencatat 1×', /Dibaca ulang 1×/.test(await page.textContent('.note-card')));
     await page.reload(); await page.waitForSelector('#view h1');
     check('catatan tetap ada setelah reload', (await (await stateOf(page)).wrong.length) === 2);
+    await go(page, '#/catatan');
     await page.click('[data-note]'); await page.fill('#n-note', 'Diubah'); await page.click('[data-act=note-save]'); await page.waitForTimeout(150);
     check('ubah catatan', /Diubah/.test(await page.textContent('#view')));
     await page.click('[data-note]'); await page.click('[data-act=note-del]'); await page.click('#confirm [value=ok]'); await page.waitForTimeout(100);
@@ -273,7 +281,7 @@ function seedState() {
     await go(page, '#/pengaturan');
     await page.fill('#skd', '2027-01-20'); await page.dispatchEvent('#skd', 'change');
     await go(page, '#/hari-ini');
-    check('SKD sebelum tryout terakhir memunculkan peringatan', /jatuh sebelum tryout terakhir/.test(await page.textContent('#view')));
+    check('SKD sebelum tryout terakhir memunculkan peringatan', /lebih awal dari tryout terakhir/.test(await page.textContent('#view')));
     await go(page, '#/pengaturan');
     await page.fill('#thr-twk', '50'); await page.dispatchEvent('#thr-twk', 'change');
     await page.fill('#thr-tiu', '999'); await page.dispatchEvent('#thr-tiu', 'change');
@@ -289,6 +297,32 @@ function seedState() {
     const st = await stateOf(page);
     check('pengaturan bertahan setelah reload', st.settings.skdDate === '2027-01-20' && st.settings.thr.twk === 50 && st.settings.theme === 'dark' && (await page.getAttribute('html', 'data-theme')) === 'dark', st.settings);
     await go(page, '#/hari-ini'); await shot(page, '09-hari-ini-gelap-375');
+    await ctx.close();
+  }
+
+  // ---------------------------------------------------------------- Navigasi 2 tab
+  console.log('Navigasi sederhana: 2 tab + ikon pengaturan');
+  {
+    const { ctx, page } = await open('2026-11-29T11:30:00Z', { hash: '#/hari-ini' }); // alias lama, Minggu 19.30
+    const h1 = async () => { await page.waitForTimeout(120); return page.textContent('#view h1'); };
+    const cur = async () => { await page.waitForTimeout(40); return page.$$eval('nav a[aria-current=page]', a => a.map(x => x.textContent.trim()).join()); };
+    check('alamat lama #/hari-ini membuka tab Tryout', (await h1()) === 'Tryout' && (await cur()) === 'Tryout');
+    check('tab Tryout memuat timeline hari ini, progres, dan 10 minggu dengan 120 baris tryout', (await page.locator('.timeline .ev').count()) > 3 && (await page.locator('details.week[data-w]').count()) === 10 && (await page.locator('li.item').count()) === 120 && (await page.locator('[role=progressbar]').count()) > 10);
+    check('hanya 2 tautan di navigasi bawah', (await page.locator('nav.bottom a').count()) === 2);
+    await page.click('nav a[href="#/rekap"]');
+    check('tab Rekap aktif: grafik skor', (await h1()) === 'Rekap' && (await cur()) === 'Rekap' && (await page.locator('[data-series]').count()) === 4);
+    await page.click('[data-tab=salah]');
+    check('Rekap > Soal salah: tombol tambah catatan dan filter subtes', (await page.locator('[data-act=note-new]').count()) === 1 && (await page.locator('[data-notesub]').count()) === 4);
+    await page.click('a.gear');
+    check('ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif', (await h1()) === 'Pengaturan' && (await cur()) === '' && (await page.locator('#skd').count()) === 1);
+    await page.click('a.gear:has-text("Kembali")');
+    check('tombol Kembali ke Tryout', (await h1()) === 'Tryout');
+    const g = await page.$eval('a.gear', e => { const r = e.getBoundingClientRect(); return [Math.round(r.right), innerWidth, Math.round(r.top)]; });
+    check('gerigi berada di pojok kanan atas', g[0] >= g[1] - 24 && g[2] < 40, g);
+    await page.locator('.ev.now [data-act=goto-notes]').click();
+    check('pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Soal salah', (await h1()) === 'Rekap' && (await page.locator('[data-act=note-new]').count()) === 1);
+    await page.evaluate(() => { location.hash = '#/catatan'; }); await page.waitForTimeout(80);
+    check('alamat lama #/catatan membuka Rekap', (await h1()) === 'Rekap');
     await ctx.close();
   }
 
@@ -321,10 +355,10 @@ function seedState() {
 
   {
     const g = await open('2026-12-12T02:00:00Z', { seed: true, ctx: { colorScheme: 'dark' } });
-    await shot(g.page, '13-gelap-hari-ini-375');
-    await go(g.page, '#/kalender'); await g.page.waitForTimeout(100); await shot(g.page, '14-gelap-kalender-375');
-    await go(g.page, '#/skor'); await g.page.click('[data-tab=tren]'); await shot(g.page, '15-gelap-tren-375');
-    await go(g.page, '#/catatan'); await shot(g.page, '16-gelap-catatan-375');
+    await shot(g.page, '13-gelap-tryout-375');
+    await go(g.page, '#/tryout'); await toWeeks(g.page); await g.page.waitForTimeout(100); await shot(g.page, '14-gelap-minggu-375');
+    await go(g.page, '#/rekap'); await shot(g.page, '15-gelap-tren-375');
+    await go(g.page, '#/catatan'); await shot(g.page, '16-gelap-soal-salah-375');
     await g.ctx.close();
   }
 
@@ -355,9 +389,8 @@ function seedState() {
       for (const id of ['sheet', 'confirm']) { const b = getComputedStyle(document.getElementById(id), '::backdrop').backgroundColor; if (b !== hex('--backdrop')) bad.push('::backdrop ' + id + ' ' + b); }
       return bad.slice(0, 8);
     });
-    for (const h of ['#/hari-ini', '#/kalender', '#/skor', '#/catatan', '#/pengaturan']) {
+    for (const h of ['#/tryout', '#/rekap', '#/rekap-salah', '#/pengaturan']) {
       await go(page, h);
-      if (h === '#/skor') { check(scheme + ' ' + h + ' (daftar): warna polos', (await audit()).length === 0, await audit()); await page.click('[data-tab=tren]'); }
       const bad = await audit();
       check(scheme + ' ' + h + ': hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)', bad.length === 0, bad);
     }
@@ -379,21 +412,21 @@ function seedState() {
   console.log('K16 layout 375 px');
   {
     const { ctx, page } = await open('2026-12-12T02:00:00Z', { seed: true });
-    for (const h of ['#/hari-ini', '#/kalender', '#/skor', '#/catatan', '#/pengaturan']) {
+    for (const h of ['#/tryout', '#/rekap', '#/rekap-salah', '#/pengaturan']) {
       await go(page, h);
-      const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth, tgt: [].slice.call(document.querySelectorAll('button, a.btn, nav a, select, input:not([type=checkbox]):not([type=file]), summary, label.btn, .chk')).filter(e => e.offsetParent !== null || e.tagName === 'A').map(e => { const r = e.getBoundingClientRect(); return { t: e.tagName + (e.className ? '.' + String(e.className).split(' ')[0] : ''), h: Math.round(r.height), w: Math.round(r.width) }; }).filter(x => x.h < 44 || x.w < 40) }));
+      const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth, tgt: [].slice.call(document.querySelectorAll('button, a.btn, a.gear, nav a, select, input:not([type=checkbox]):not([type=file]), summary, label.btn, .chk')).filter(e => e.offsetParent !== null || e.tagName === 'A').map(e => { const r = e.getBoundingClientRect(); return { t: e.tagName + (e.className ? '.' + String(e.className).split(' ')[0] : ''), h: Math.round(r.height), w: Math.round(r.width) }; }).filter(x => x.h < 44 || x.w < 40) }));
       check(h + ': tanpa scroll horizontal', m.sw <= m.iw, [m.sw, m.iw]);
       check(h + ': semua tombol/input minimal 44 px tinggi', m.tgt.length === 0, m.tgt.slice(0, 6));
     }
     const nav = await page.$$eval('nav.bottom a', a => a.map(x => x.textContent.trim()));
-    check('navigasi bawah: Hari Ini, Kalender, Skor, Catatan, Pengaturan', nav.join() === 'Hari Ini,Kalender,Skor,Catatan,Pengaturan', nav);
+    check('navigasi bawah hanya 2 tab: Tryout dan Rekap', nav.join() === 'Tryout,Rekap', nav);
     await go(page, '#/skor'); await page.click('[data-open=T025]');
     await page.waitForTimeout(100); await shot(page, '10-sheet-tryout-375');
     const sheetBox = await page.evaluate(() => { const s = document.getElementById('sheet'); return { sw: s.scrollWidth, cw: s.clientWidth }; });
     check('sheet detail tanpa scroll horizontal', sheetBox.sw <= sheetBox.cw, sheetBox);
     await closeSheet(page);
     await page.setViewportSize({ width: 320, height: 640 });
-    for (const h of ['#/hari-ini', '#/kalender', '#/skor', '#/catatan', '#/pengaturan']) { await go(page, h); const m = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); check('320 px ' + h + ': tanpa scroll horizontal', m[0] <= m[1], m); }
+    for (const h of ['#/tryout', '#/rekap', '#/rekap-salah', '#/pengaturan']) { await go(page, h); const m = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); check('320 px ' + h + ': tanpa scroll horizontal', m[0] <= m[1], m); }
     await ctx.close();
     const d = await open('2026-12-12T02:00:00Z', { seed: true, ctx: { viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 } });
     await shot(d.page, '11-hari-ini-desktop-1280'); await d.ctx.close();
@@ -440,7 +473,7 @@ function seedState() {
     check('service worker aktif dengan scope akar situs', swState.active && swState.scope === base, swState);
     await page.reload(); await page.waitForSelector('#view h1');
     check('halaman dikendalikan service worker setelah muat ulang', await page.evaluate(() => !!navigator.serviceWorker.controller));
-    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v2')).keys()).map(r => new URL(r.url).pathname));
+    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v3')).keys()).map(r => new URL(r.url).pathname));
     check('cangkang aplikasi ter-cache', ['/index.html', '/app.js', '/schedule.js', '/styles.css', '/manifest.webmanifest', '/icons/icon-192.png'].every(p => cached.includes(p)), cached);
     await page.check('[data-done=T001]');
     await ctx.setOffline(true);

@@ -4,10 +4,11 @@
   var S = window.Sked;
   var KEY = 'tryoutSkd.v1';
   var FIRED_KEY = 'tryoutSkd.notifTerkirim';
-  var ROUTES = ['hari-ini', 'kalender', 'skor', 'catatan', 'pengaturan'];
+  var ROUTES = ['tryout', 'rekap', 'pengaturan'];
+  var ALIAS = { 'hari-ini': 'tryout', kalender: 'tryout', skor: 'rekap', catatan: 'rekap' };
   var memoryOnly = false;
   var state = load();
-  var ui = { scoreTab: 'daftar', scoreWeek: null, series: 'twk', noteSub: 'Semua', noteTopic: '', calOpen: {}, sheet: null, shown: '' };
+  var ui = { recapTab: 'skor', series: 'twk', noteSub: 'Semua', noteTopic: '', calOpen: {}, sheet: null, shown: '' };
   var installEvent = null;
   var view = document.getElementById('view');
   var sheet = document.getElementById('sheet');
@@ -71,28 +72,31 @@
     if (opts.basic) {
       var miss = S.missed(state, d0);
       if (miss.length) {
-        out.push('<div class="warn bad"><p>' + miss.length + ' tryout terlewat dan belum dijadwalkan ulang. Geser ke hari lain di minggu yang sama supaya total tetap 120 (ketuk nomornya).</p><div class="chips">' + miss.map(function (t) { return chipBtn(t, d0) + '<span class="sub">' + esc(shortDay(t.date)) + '</span>'; }).join(' ') + '</div></div>');
+        out.push('<div class="warn bad"><p>' + miss.length + ' tryout terlewat. Ketuk nomornya, lalu geser ke hari lain di minggu yang sama.</p><div class="chips">' + miss.map(function (t) { return chipBtn(t, d0) + '<span class="sub">' + esc(shortDay(t.date)) + '</span>'; }).join(' ') + '</div></div>');
       }
       var hp = S.holidayPending(state, d0, 14);
       if (hp.length) {
         var dates = {}; hp.forEach(function (t) { (dates[t.date] = dates[t.date] || []).push(t); });
         Object.keys(dates).forEach(function (dt) {
-          out.push('<div class="warn"><p>' + esc(S.HOLIDAYS[dt]) + ' jatuh pada ' + esc(S.fmtLong(dt)) + '. ' + dates[dt].length + ' tryout hari itu bisa digeser ke hari lain di minggu yang sama.</p><div class="chips">' + dates[dt].map(function (t) { return chipBtn(t, d0); }).join(' ') + '</div></div>');
+          out.push('<div class="warn"><p>' + esc(S.HOLIDAYS[dt]) + ', ' + esc(shortDay(dt)) + ': ' + dates[dt].length + ' tryout bisa digeser ke hari lain minggu itu.</p><div class="chips">' + dates[dt].map(function (t) { return chipBtn(t, d0); }).join(' ') + '</div></div>');
         });
       }
       var as = S.afterSkd(state);
-      if (as.length) out.push('<div class="warn bad"><p>Tanggal SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ') jatuh sebelum tryout terakhir: ' + as.length + ' tryout yang belum selesai berada pada atau setelah hari SKD. Pertimbangkan memadatkan atau mengurangi tryout.</p></div>');
+      if (as.length) out.push('<div class="warn bad"><p>Tanggal SKD lebih awal dari tryout terakhir: ' + as.length + ' tryout belum selesai melewati hari SKD.</p></div>');
     }
     var avgs = S.weeklyAverages(state);
     ['twk', 'tkp'].forEach(function (k) {
       var p = S.plateau(avgs, k);
-      if (p) out.push('<div class="warn bad"><p>Skor mentok: rata-rata ' + k.toUpperCase() + ' tidak naik dua minggu berturut-turut (minggu ' + p.weeks[0] + '–' + p.weeks[2] + ': ' + p.values.map(fmtNum).join(' → ') + '). Ganti sebagian tryout dengan belajar materi, dan utamakan pembahasan.</p></div>');
+      if (!p) return;
+      if (opts.trend) out.push('<div class="warn bad"><p>Skor mentok: rata-rata ' + k.toUpperCase() + ' tidak naik dua minggu berturut-turut (' + p.values.map(fmtNum).join(' → ') + '). Ganti sebagian tryout dengan belajar materi.</p></div>');
+      else if (opts.pointer) out.push('<div class="warn bad"><p>Skor mentok di ' + k.toUpperCase() + '. <a href="#/rekap">Lihat Rekap</a></p></div>');
     });
     S.duplicates(state).forEach(function (g) {
-      out.push('<div class="warn"><p>Paket dobel: “' + esc(g.name) + '” dipakai ' + g.ids.length + ' kali (tryout ' + g.ids.map(function (id) { return '#' + m[id].n; }).join(', ') + '). Mengulang paket yang sama membuat skor naik palsu.</p><div class="chips">' + g.ids.map(function (id) { return chipBtn(m[id], d0); }).join(' ') + '</div></div>');
+      out.push('<div class="warn"><p>Paket dobel: “' + esc(g.name) + '” dipakai di tryout ' + g.ids.map(function (id) { return '#' + m[id].n; }).join(', ') + '. Pakai paket yang berbeda.</p><div class="chips">' + g.ids.map(function (id) { return chipBtn(m[id], d0); }).join(' ') + '</div></div>');
     });
     return out.join('');
   }
+
 
   /* ---------- Hari Ini ---------- */
   function eventHtml(e, tmap, n, date) {
@@ -106,7 +110,7 @@
       if (e.kind === 'tryout') act = '<label class="chk"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + '><span>Selesai</span></label><button class="btn small" data-open="' + t.id + '">Buka</button>';
       else act = '<label class="chk"><input type="checkbox" data-rev="' + t.id + '"' + (t.reviewed ? ' checked' : '') + '><span>Sudah dibahas</span></label>';
     }
-    if (e.kind === 'baca') act = '<a class="btn small" href="#/catatan">Buka catatan</a>';
+    if (e.kind === 'baca') act = '<button class="btn small" data-act="goto-notes">Buka catatan</button>';
     return '<li class="' + cls + stt + (e.conflict ? ' conflict' : '') + '"' + (stt === ' now' ? ' aria-current="true"' : '') + '><div class="time">' + time + '</div><div class="body"><div class="lbl">' + esc(e.label) + (stt === ' now' ? ' <span class="tag">sedang berjalan</span>' : '') + (e.conflict ? ' <span class="tag bad">bentrok jam</span>' : '') + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + (act ? '<div class="act">' + act + '</div>' : '') + '</div></li>';
   }
   function countdownText(sec) {
@@ -115,15 +119,15 @@
     return p(Math.floor(sec / 3600)) + ':' + p(Math.floor(sec % 3600 / 60)) + ':' + p(sec % 60);
   }
   function statusKey(r, n) { return n.date + '|' + (r.current ? r.current.kind + r.current.start + (r.current.toId || '') : '-') + '|' + (r.next ? r.nextDate + r.next.start : '-'); }
-  function viewToday() {
+  function todayBlock() {
     var n = now(), r = S.statusNow(state, n), list = S.tryoutList(state), tmap = byId(list), day = r.today;
     var ts = S.totalStats(state), dts = S.daysToSkd(state, n.date), wk = S.weekOf(n.date), ws = S.weekStats(state);
     ui.shown = statusKey(r, n);
-    var h = '<header class="page-h"><h1>Hari ini</h1><p>' + esc(S.fmtLong(n.date)) + ' · WITA' + (day.holiday ? ' · <span class="tag">' + esc(day.holiday) + '</span>' : '') + '</p></header>';
+    var h = '<h2 class="sec">' + esc(S.fmtLong(n.date)) + (day.holiday ? ' <span class="tag">' + esc(day.holiday) + '</span>' : '') + '</h2>';
     h += '<section class="card"><div class="two"><div><div class="big">' + (dts > 0 ? 'H-' + dts : dts === 0 ? 'Hari SKD' : 'SKD lewat') + '</div><div class="sub">SKD ' + esc(S.fmtLong(state.settings.skdDate)) + '</div></div><div><div class="big">' + ts.done + '/' + ts.total + '</div><div class="sub">tryout selesai</div></div></div>' + bar(ts.done, ts.total, 'Progres total tryout');
     if (wk) h += '<div class="rowline"><span>Minggu ' + wk + '</span><span>' + ws[wk - 1].done + '/' + S.PER_WEEK + '</span></div>' + bar(ws[wk - 1].done, S.PER_WEEK, 'Progres minggu ' + wk);
     h += '</section>';
-    var warn = warnings({ basic: true });
+    var warn = warnings({ basic: true, pointer: true });
     if (day.phase !== 'program') h += warn;
     if (day.phase === 'program') {
       h += '<section class="card now-card" aria-live="off">';
@@ -135,7 +139,7 @@
       if (!day.tryouts.length) h += '<p class="hint">Tidak ada tryout hari ini.</p>';
     } else {
       var msg = { sebelum: 'Program belum dimulai. Tryout pertama: ' + S.fmtLong(S.START_DATE) + ', pukul 19.00 WITA.', tenang: 'Minggu tenang: tidak ada tryout. Cukup baca ulang buku soal salah dan jaga tidur.', skd: 'Hari ini hari SKD. Tidak ada tryout.', setelah: 'SKD sudah lewat. Jadwal tryout selesai.' }[day.phase];
-      h += '<section class="card"><p>' + msg + '</p>' + (day.phase === 'tenang' ? '<a class="btn" href="#/catatan">Buka buku soal salah</a>' : '') + '</section>';
+      h += '<section class="card"><p>' + msg + '</p>' + (day.phase === 'tenang' ? '<button class="btn" data-act="goto-notes">Buka buku soal salah</button>' : '') + '</section>';
       if (r.next) h += '<section class="card now-card"><div class="rowline"><span>Berikutnya: ' + esc(r.next.label) + ' · ' + esc(shortDay(r.nextDate)) + ' ' + S.fmtTime(r.next.start) + '</span><span class="cd" id="cd" data-abs="' + (S.dayNum(r.nextDate) * 86400 + r.next.start * 60) + '">' + countdownText(r.nextIn) + '</span></div></section>';
     }
     return h;
@@ -144,10 +148,13 @@
   /* ---------- Kalender ---------- */
   var WEEK_NOTES = { 1: 'Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des: tryout hari itu boleh digeser ke hari lain di minggu yang sama.', 6: 'Tahun Baru jatuh Jumat 1 Jan: geser ke hari lain di minggu yang sama.', 10: 'Tryout terakhir.' };
   var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Soal yang salah dicatat per topik, lalu dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Dari 1 Februari sampai hari SKD tidak ada tryout: cukup baca ulang buku soal salah dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
-  function viewCalendar() {
-    var d0 = today(), cw = S.weekOf(d0), list = S.tryoutList(state), ws = S.weekStats(state);
-    var h = '<header class="page-h"><h1>Kalender</h1><p>10 minggu · 23 Nov 2026 – 31 Jan 2027</p></header>';
-    h += '<p class="legend"><span class="chip s-selesai">✓ selesai</span> <span class="chip s-hari-ini">hari ini</span> <span class="chip s-terjadwal">terjadwal</span> <span class="chip s-terlewat">! terlewat</span> <span class="chip moved">↔ digeser</span></p>';
+  function rowHtml(t, d0, thr) {
+    var tot = S.totalScore(t), st = S.statusOf(t, d0);
+    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : '') + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
+  }
+  function weeksBlock() {
+    var d0 = today(), cw = S.weekOf(d0), list = S.tryoutList(state), ws = S.weekStats(state), thr = state.settings.thr;
+    var h = '<h2 class="sec">Semua minggu</h2>';
     for (var w = 1; w <= S.WEEKS; w++) {
       var start = S.weekStart(w), end = S.addDays(start, 6), open = ui.calOpen[w] !== undefined ? ui.calOpen[w] : w === cw;
       var wl = list.filter(function (t) { return t.week === w; });
@@ -155,41 +162,31 @@
       h += bar(ws[w - 1].done, S.PER_WEEK, 'Progres minggu ' + w);
       h += '<div class="dots" aria-hidden="true">' + wl.map(function (t) { return '<i class="dot s-' + S.statusOf(t, d0) + '"></i>'; }).join('') + '</div>';
       if (WEEK_NOTES[w]) h += '<p class="note">' + esc(WEEK_NOTES[w]) + '</p>';
-      for (var k = 0; k < 7; k++) {
-        var dt = S.addDays(start, k), here = wl.filter(function (t) { return t.date === dt; });
-        h += '<div class="dayrow' + (dt === d0 ? ' today' : '') + '"><div class="dl">' + esc(shortDay(dt)) + (S.HOLIDAYS[dt] ? '<small class="hol">' + esc(S.HOLIDAYS[dt]) + '</small>' : '') + '</div><div class="chips">' + (here.length ? here.map(function (t) { return '<button class="chip s-' + S.statusOf(t, d0) + (t.moved ? ' moved' : '') + '" data-open="' + t.id + '" aria-label="Tryout ' + t.n + (t.moved ? ', digeser' : '') + ', ' + S.statusOf(t, d0).replace('-', ' ') + '">' + (S.statusOf(t, d0) === 'selesai' ? '✓ ' : S.statusOf(t, d0) === 'terlewat' ? '! ' : '') + t.n + (t.moved ? ' ↔' : '') + '</button>'; }).join(' ') : '<span class="sub">—</span>') + '</div></div>';
-      }
-      h += '</details>';
+      h += '<ul class="list">' + wl.map(function (t) { return rowHtml(t, d0, thr); }).join('') + '</ul></details>';
     }
-    h += '<section class="card"><h2 class="sec">Minggu tenang</h2><p>1 Februari sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + '): tanpa tryout. Baca ulang buku soal salah dan jaga tidur.</p></section>';
-    h += '<details class="week rules"><summary><span class="wt">Aturan tetap</span></summary><ol>' + RULES.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></details>';
+    h += '<p class="hint">Minggu tenang: 1 Februari sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + '), tanpa tryout. Baca ulang buku soal salah dan jaga tidur.</p>';
     return h;
   }
+  function pageHead(title, sub, noGear) {
+    return '<header class="page-h"><div><h1>' + esc(title) + '</h1><p>' + esc(sub) + '</p></div>' + (noGear ? '<a class="gear" href="#/tryout">Kembali</a>' : '<a class="gear" href="#/pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></a>') + '</header>';
+  }
+  function viewTryout() { return pageHead('Tryout', '120 tryout · WITA') + todayBlock() + weeksBlock(); }
+
 
   /* ---------- Skor ---------- */
   function pill(label, v, thr) {
     if (v === null) return '<span class="pill">' + label + ' —</span>';
     return '<span class="pill ' + (v >= thr ? 'ok' : 'bad') + '">' + label + ' ' + v + (v >= thr ? ' ✓' : ' ✗') + '</span>';
   }
-  function viewScores() {
-    var d0 = today(), h = '<header class="page-h"><h1>Skor</h1><p>Checklist tryout dan tren nilai</p></header>';
-    h += '<div class="seg" role="tablist"><button role="tab" aria-selected="' + (ui.scoreTab === 'daftar') + '" data-tab="daftar">Daftar</button><button role="tab" aria-selected="' + (ui.scoreTab === 'tren') + '" data-tab="tren">Tren</button></div>';
-    if (ui.scoreTab === 'daftar') {
-      if (!ui.scoreWeek) ui.scoreWeek = currentWeek(d0);
-      var w = ui.scoreWeek, list = S.tryoutList(state).filter(function (t) { return t.week === w; }), ws = S.weekStats(state)[w - 1], thr = state.settings.thr;
-      h += '<div class="field"><label for="weeksel">Minggu</label><select id="weeksel" data-weeksel>' + Array.apply(null, Array(S.WEEKS)).map(function (_, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === w ? ' selected' : '') + '>Minggu ' + (i + 1) + ' (' + S.fmtShort(S.weekStart(i + 1)) + ')</option>'; }).join('') + '</select></div>';
-      h += '<div class="rowline"><span>Selesai minggu ' + w + '</span><span>' + ws.done + '/' + S.PER_WEEK + '</span></div>' + bar(ws.done, S.PER_WEEK, 'Progres minggu ' + w);
-      h += '<ul class="list">' + list.map(function (t) {
-        var tot = S.totalScore(t);
-        return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : '') + ' <span class="st s-' + S.statusOf(t, d0) + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[S.statusOf(t, d0)] + '</span></span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span><span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span></button></li>';
-      }).join('') + '</ul>';
-    } else {
-      h += warnings({ basic: false });
-      var items = [['twk', 'TWK'], ['tiu', 'TIU'], ['tkp', 'TKP'], ['total', 'Total']];
-      h += '<div class="seg small">' + items.map(function (it) { return '<button aria-pressed="' + (ui.series === it[0]) + '" data-series="' + it[0] + '">' + it[1] + '</button>'; }).join('') + '</div>';
-      h += chart(ui.series) + avgTable();
-      h += '<p class="hint">Peringatan “skor mentok” dihitung dari rata-rata mingguan TWK dan TKP, minimal ' + S.MIN_PER_WEEK_FOR_TREND + ' tryout bernilai per minggu.</p>';
-    }
+  function viewRecap() {
+    var h = pageHead('Rekap', 'Grafik skor dan soal salah');
+    h += '<div class="seg" role="tablist"><button role="tab" aria-selected="' + (ui.recapTab === 'skor') + '" data-tab="skor">Skor</button><button role="tab" aria-selected="' + (ui.recapTab === 'salah') + '" data-tab="salah">Soal salah</button></div>';
+    if (ui.recapTab === 'salah') return h + notesBlock();
+    var items = [['twk', 'TWK'], ['tiu', 'TIU'], ['tkp', 'TKP'], ['total', 'Total']];
+    h += warnings({ trend: true });
+    h += '<div class="seg small">' + items.map(function (it) { return '<button aria-pressed="' + (ui.series === it[0]) + '" data-series="' + it[0] + '">' + it[1] + '</button>'; }).join('') + '</div>';
+    h += chart(ui.series) + avgTable();
+    h += '<p class="hint">“Skor mentok” dihitung dari rata-rata mingguan TWK dan TKP (minimal ' + S.MIN_PER_WEEK_FOR_TREND + ' tryout bernilai per minggu).</p>';
     return h;
   }
   function chart(key) {
@@ -225,12 +222,12 @@
   }
 
   /* ---------- Catatan (buku soal salah) ---------- */
-  function viewNotes() {
+  function notesBlock() {
     var sub = ui.noteSub, topic = ui.noteTopic, all = state.wrong;
     var topics = {}; all.forEach(function (w) { if (sub === 'Semua' || w.subtest === sub) topics[w.topic] = 1; });
     if (topic && !topics[topic]) topic = ui.noteTopic = '';
     var shown = all.filter(function (w) { return (sub === 'Semua' || w.subtest === sub) && (!topic || w.topic === topic); }).slice().reverse();
-    var h = '<header class="page-h"><h1>Buku soal salah</h1><p>Dibaca ulang tiap Minggu pukul 19.30</p></header>';
+    var h = '<p class="hint">Dibaca ulang tiap Minggu pukul 19.30.</p>';
     h += '<button class="btn primary block" data-act="note-new">+ Tambah catatan</button>';
     h += '<div class="seg small">' + ['Semua'].concat(S.SUBTESTS).map(function (s) { return '<button aria-pressed="' + (sub === s) + '" data-notesub="' + s + '">' + s + '</button>'; }).join('') + '</div>';
     h += '<div class="field"><label for="topicsel">Topik</label><select id="topicsel" data-topicsel><option value="">Semua topik</option>' + Object.keys(topics).sort().map(function (t) { return '<option value="' + esc(t) + '"' + (t === topic ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>';
@@ -251,7 +248,7 @@
   }
   function viewSettings() {
     var s = state.settings;
-    var h = '<header class="page-h"><h1>Pengaturan</h1><p>Zona waktu: WITA (Asia/Makassar)</p></header>';
+    var h = pageHead('Pengaturan', 'Zona waktu: WITA (Asia/Makassar)', true);
     h += '<section class="card"><h2 class="sec">Tanggal SKD</h2><div class="field"><label for="skd">Tanggal SKD</label><input id="skd" type="date" value="' + esc(s.skdDate) + '" data-set="skdDate"></div><p class="hint">Default 8 Februari 2027. Ikuti pengumuman resmi di sscasn.bkn.go.id.</p></section>';
     h += '<section class="card"><h2 class="sec">Ambang batas lulus</h2><div class="grid3">' + ['twk', 'tiu', 'tkp'].map(function (k) { return '<div class="field"><label for="thr-' + k + '">' + k.toUpperCase() + '</label><input id="thr-' + k + '" type="number" inputmode="numeric" min="0" max="' + S.MAX[k] + '" value="' + s.thr[k] + '" data-thr="' + k + '"></div>'; }).join('') + '</div><p class="hint">Default TWK 65, TIU 80, TKP 166. Ubah bila aturan 2026 berbeda.</p></section>';
     h += '<section class="card"><h2 class="sec">Tampilan</h2><div class="seg" role="radiogroup" aria-label="Tema">' + [['auto', 'Otomatis'], ['light', 'Terang'], ['dark', 'Gelap']].map(function (t) { return '<button role="radio" aria-checked="' + (s.theme === t[0]) + '" data-theme="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div></section>';
@@ -259,7 +256,8 @@
     h += '<section class="card"><h2 class="sec">Cadangan data</h2><p class="hint">Data hanya tersimpan di peramban ini. Ekspor berkala sebagai cadangan.</p><div class="btns"><button class="btn" data-act="export">Ekspor JSON</button><label class="btn" for="import-file">Impor JSON</label><input id="import-file" type="file" accept="application/json,.json" hidden></div></section>';
     h += '<section class="card"><h2 class="sec">Pasang di layar utama</h2><p class="hint" id="install-hint">Android (Chrome): menu ⋮ → “Tambahkan ke Layar Utama”. iPhone (Safari): Bagikan → “Tambah ke Layar Utama”.</p>' + (installEvent ? '<button class="btn" data-act="install">Pasang aplikasi</button>' : '') + '<p class="hint" id="offline-status"></p></section>';
     h += '<section class="card danger"><h2 class="sec">Reset data</h2><p class="hint">Menghapus semua skor, catatan, geseran jadwal, dan pengaturan di perangkat ini.</p><button class="btn bad" data-act="reset">Reset semua data</button></section>';
-    h += '<p class="hint center">Tryout SKD · v1.0 · data lokal, tanpa akun</p>';
+    h += '<details class="week rules"><summary><span class="wt">Aturan tetap</span></summary><ol>' + RULES.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></details>';
+    h += '<p class="hint center">Tryout SKD · v1.1 · data lokal, tanpa akun</p>';
     return h;
   }
 
@@ -319,13 +317,13 @@
   }
 
   /* ---------- Render utama ---------- */
-  function route() { var r = (location.hash || '').replace(/^#\/?/, ''); return ROUTES.indexOf(r) >= 0 ? r : 'hari-ini'; }
+  function route() { var r = (location.hash || '').replace(/^#\/?/, ''); r = ALIAS[r] || r; return ROUTES.indexOf(r) >= 0 ? r : 'tryout'; }
   function render() {
-    var r = route(), fn = { 'hari-ini': viewToday, kalender: viewCalendar, skor: viewScores, catatan: viewNotes, pengaturan: viewSettings }[r];
+    var r = route(), fn = { tryout: viewTryout, rekap: viewRecap, pengaturan: viewSettings }[r];
     var y = window.scrollY;
     view.innerHTML = fn();
     document.querySelectorAll('nav a').forEach(function (a) { var on = a.getAttribute('href') === '#/' + r; if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    document.title = { 'hari-ini': 'Hari Ini', kalender: 'Kalender', skor: 'Skor', catatan: 'Catatan', pengaturan: 'Pengaturan' }[r] + ' · Tryout SKD';
+    document.title = { tryout: 'Tryout', rekap: 'Rekap', pengaturan: 'Pengaturan' }[r] + ' · Tryout SKD';
     if (r === 'pengaturan') updateOfflineStatus();
     window.scrollTo(0, y);
   }
@@ -342,7 +340,7 @@
     var el = e.target.closest('[data-open],[data-act],[data-tab],[data-series],[data-notesub],[data-note],[data-read],[data-theme]');
     if (!el) { if (e.target === sheet) sheet.close(); return; }
     if (el.dataset.open) return openTryout(el.dataset.open);
-    if (el.dataset.tab) { ui.scoreTab = el.dataset.tab; return render(); }
+    if (el.dataset.tab) { ui.recapTab = el.dataset.tab; return render(); }
     if (el.dataset.series) { ui.series = el.dataset.series; return render(); }
     if (el.dataset.notesub) { ui.noteSub = el.dataset.notesub; return render(); }
     if (el.dataset.note) return openNote(el.dataset.note);
@@ -353,7 +351,8 @@
     }
     if (el.dataset.theme) { state.settings.theme = el.dataset.theme; afterChange(); applyTheme(); return render(); }
     var act = el.dataset.act;
-    if (act === 'close-sheet') sheet.close();
+    if (act === 'goto-notes') { ui.recapTab = 'salah'; if (route() === 'rekap') render(); else location.hash = '#/rekap'; window.scrollTo(0, 0); }
+    else if (act === 'close-sheet') sheet.close();
     else if (act === 'move') doMove();
     else if (act === 'unmove') { S.resetMove(state, ui.sheet.id); afterChange(); toast('Dikembalikan ke jadwal awal.'); renderTryoutSheet(); }
     else if (act === 'note-new') openNote(null);
@@ -373,7 +372,6 @@
     var t = e.target;
     if (t.matches('[data-done]')) { S.setField(state, t.dataset.done, { done: t.checked }); afterChange(); render(); return; }
     if (t.matches('[data-rev]')) { S.setField(state, t.dataset.rev, { reviewed: t.checked }); afterChange(); render(); return; }
-    if (t.matches('[data-weeksel]')) { ui.scoreWeek = +t.value; render(); return; }
     if (t.matches('[data-topicsel]')) { ui.noteTopic = t.value; render(); return; }
     if (t.matches('[data-lead]')) { state.settings.lead = +t.value; afterChange(); return; }
     if (t.matches('[data-set=skdDate]')) {
@@ -523,7 +521,7 @@
   var tickN = 0;
   setInterval(function () {
     tickN++;
-    if (route() === 'hari-ini' && !sheet.open && !confirmDlg.open) {
+    if (route() === 'tryout' && !sheet.open && !confirmDlg.open) {
       var n = now(), r = S.statusNow(state, n);
       if (statusKey(r, n) !== ui.shown) render();
       else { var cd = document.getElementById('cd'); if (cd && r.nextIn !== null) cd.textContent = countdownText(r.nextIn); }

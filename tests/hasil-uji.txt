@@ -69,7 +69,7 @@ K3/K8 geser tryout Natal dan peringatan terlewat
   ok    setelah geser: total tetap 120, tiap minggu 12, tryout bertanda digeser
   ok    peringatan Natal tinggal 1 tryout
   ok    peringatan Natal hilang setelah kedua tryout digeser
-  ok    kalender menandai libur Natal dan tryout digeser (↔)
+  ok    minggu 5 memuat catatan Natal dan tryout yang digeser bertanda ↔
   ok    kembalikan ke jadwal awal (Jumat 25 Des)
   ok    Jumat 1 Jan 2027: 2 tryout, bisa digeser ke Kamis 31 Des atau Sabtu 2 Jan, tidak ke Senin 4 Jan
 K10/K12/K15 tren, kalender, ekspor dan impor JSON
@@ -104,6 +104,17 @@ K13 pengaturan: SKD, ambang, tema
   ok    mode gelap menerapkan data-theme
   ok    warna latar berbeda antara gelap dan terang
   ok    pengaturan bertahan setelah reload
+Navigasi sederhana: 2 tab + ikon pengaturan
+  ok    alamat lama #/hari-ini membuka tab Tryout
+  ok    tab Tryout memuat timeline hari ini, progres, dan 10 minggu dengan 120 baris tryout
+  ok    hanya 2 tautan di navigasi bawah
+  ok    tab Rekap aktif: grafik skor
+  ok    Rekap > Soal salah: tombol tambah catatan dan filter subtes
+  ok    ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif
+  ok    tombol Kembali ke Tryout
+  ok    gerigi berada di pojok kanan atas
+  ok    pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Soal salah
+  ok    alamat lama #/catatan membuka Rekap
 Tema warna gaya GitHub (solid, tanpa transparansi)
   ok    CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter
   ok    gelap: latar #0d1117, kartu #161b22, border #30363d, teks #e6edf3
@@ -115,41 +126,34 @@ Tema warna gaya GitHub (solid, tanpa transparansi)
   ok    otomatis mengikuti sistem gelap
   ok    otomatis mengikuti sistem terang
 Warna polos di semua halaman dan dialog (gelap dan terang)
-  ok    dark #/hari-ini: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    dark #/kalender: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    dark #/skor (daftar): warna polos
-  ok    dark #/skor: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    dark #/catatan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/tryout: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/rekap: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/rekap-salah: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
   ok    dark #/pengaturan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
   ok    dark: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
   ok    dark: dialog detail tryout polos, termasuk ::backdrop
   ok    dark: dialog konfirmasi polos, termasuk ::backdrop
-  ok    light #/hari-ini: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    light #/kalender: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    light #/skor (daftar): warna polos
-  ok    light #/skor: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
-  ok    light #/catatan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/tryout: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/rekap: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/rekap-salah: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
   ok    light #/pengaturan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
   ok    light: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
   ok    light: dialog detail tryout polos, termasuk ::backdrop
   ok    light: dialog konfirmasi polos, termasuk ::backdrop
 K16 layout 375 px
-  ok    #/hari-ini: tanpa scroll horizontal
-  ok    #/hari-ini: semua tombol/input minimal 44 px tinggi
-  ok    #/kalender: tanpa scroll horizontal
-  ok    #/kalender: semua tombol/input minimal 44 px tinggi
-  ok    #/skor: tanpa scroll horizontal
-  ok    #/skor: semua tombol/input minimal 44 px tinggi
-  ok    #/catatan: tanpa scroll horizontal
-  ok    #/catatan: semua tombol/input minimal 44 px tinggi
+  ok    #/tryout: tanpa scroll horizontal
+  ok    #/tryout: semua tombol/input minimal 44 px tinggi
+  ok    #/rekap: tanpa scroll horizontal
+  ok    #/rekap: semua tombol/input minimal 44 px tinggi
+  ok    #/rekap-salah: tanpa scroll horizontal
+  ok    #/rekap-salah: semua tombol/input minimal 44 px tinggi
   ok    #/pengaturan: tanpa scroll horizontal
   ok    #/pengaturan: semua tombol/input minimal 44 px tinggi
-  ok    navigasi bawah: Hari Ini, Kalender, Skor, Catatan, Pengaturan
+  ok    navigasi bawah hanya 2 tab: Tryout dan Rekap
   ok    sheet detail tanpa scroll horizontal
-  ok    320 px #/hari-ini: tanpa scroll horizontal
-  ok    320 px #/kalender: tanpa scroll horizontal
-  ok    320 px #/skor: tanpa scroll horizontal
-  ok    320 px #/catatan: tanpa scroll horizontal
+  ok    320 px #/tryout: tanpa scroll horizontal
+  ok    320 px #/rekap: tanpa scroll horizontal
+  ok    320 px #/rekap-salah: tanpa scroll horizontal
   ok    320 px #/pengaturan: tanpa scroll horizontal
 K18 notifikasi (izin diberikan dan ditolak)
   ok    izin diberikan: pengingat aktif
@@ -180,4 +184,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-125 pemeriksaan lulus, 0 gagal
+128 pemeriksaan lulus, 0 gagal

@@ -8,12 +8,12 @@ Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
 
 ## Fitur
 
-- **Hari Ini**: timeline kegiatan, sorotan kegiatan yang sedang berjalan, hitung mundur ke kegiatan berikutnya, progres, H-minus SKD, dan peringatan.
-- **Kalender**: 10 minggu, status tiap tryout (selesai, hari ini, terjadwal, terlewat, digeser), catatan Natal/Tahun Baru, 7 aturan tetap.
-- **Skor**: checklist per minggu (selesai, nama paket, TWK/TIU/TKP, total otomatis, status pembahasan, lulus/belum per subtes), grafik tren per subtes dan total, rata-rata per minggu, peringatan skor mentok dan paket dobel.
-- **Catatan**: buku soal salah per subtes dan topik, filter, penanda sudah dibaca ulang; pengingat Minggu 19.30.
-- **Pengaturan**: tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub: gelap (#0d1117), terang (#ffffff), atau otomatis mengikuti sistem; semua warna solid tanpa transparansi, notifikasi, ekspor/impor, reset dengan konfirmasi.
-- **Geser tryout**: ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
+Navigasi sederhana: **2 tab** di bawah (Tryout, Rekap) dan ikon gerigi di pojok kanan atas untuk Pengaturan.
+
+- **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/120 dan x/12), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 10 minggu yang bisa dibuka. Tiap minggu berisi 12 tryout dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
+- **Tab Rekap**: *Skor* (grafik tren TWK/TIU/TKP/total dengan garis ambang, rata-rata per minggu, peringatan skor mentok) dan *Soal salah* (buku soal salah per subtes dan topik, filter, penanda sudah dibaca ulang; pengingat Minggu 19.30).
+- **Pengaturan** (ikon gerigi): tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub (gelap #0d1117, terang #ffffff, atau otomatis mengikuti sistem; semua warna solid tanpa transparansi), notifikasi, ekspor/impor, reset dengan konfirmasi, dan 7 aturan tetap.
+- Alamat lama (`#/hari-ini`, `#/kalender`, `#/skor`, `#/catatan`) masih diarahkan ke tab yang sesuai.
 
 ## Struktur berkas
 
@@ -84,7 +84,7 @@ pada pembukaan berikutnya (kadang perlu dua kali buka). Jika mengubah daftar ber
 
 ```bash
 node tests/logic.test.js                          # 32 tes logika, tanpa dependensi
-npm i -D playwright && node tests/e2e.test.js     # 125 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
+npm i -D playwright && node tests/e2e.test.js     # 128 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
 Jadwal sudah dicocokkan dengan PDF "Jadwal Tryout Disiplin": templat harian, jumlah per hari, rentang tanggal tiap minggu, catatan Natal/Tahun Baru, dan 7 aturan tetap sama.

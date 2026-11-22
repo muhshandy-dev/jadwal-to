@@ -1,6 +1,6 @@
 # Bukti pengujian
 
-Hasil mentah: `tests/hasil-uji.txt` (32 tes logika + 125 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
+Hasil mentah: `tests/hasil-uji.txt` (32 tes logika + 128 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
 Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), zona waktu peramban sengaja `America/Los_Angeles`, jam palsu untuk skenario waktu.
 
 | # | Kriteria | Bukti |
@@ -16,7 +16,7 @@ Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), 
 | K9 | Paket dobel | `logic` (huruf/spasi/tanda baca diabaikan) dan `e2e` (peringatan di sheet dan halaman Skor) |
 | K10 | Tren dan skor mentok | `e2e`: data contoh 3 minggu → grafik SVG dengan garis ambang, tabel rata-rata, peringatan mentok TWK dan tidak untuk TKP yang naik. Screenshot 04, 05. `logic`: aturan mentok termasuk kasus batas |
 | K11 | Buku soal salah | `e2e`: tambah, ubah, hapus, filter subtes dan topik, penanda dibaca ulang, persisten; Minggu 19.30 kegiatan "Baca ulang buku soal salah" aktif. Screenshot 06 |
-| K12 | Kalender | Screenshot 02; `e2e`: 10 minggu, libur Natal dan tanda ↔ pada yang digeser |
+| K12 | Kalender | Kini bagian tab Tryout (10 minggu, status tiap tryout). Screenshot 02; `e2e`: 10 minggu, 120 baris, catatan Natal dan tanda ↔ pada yang digeser |
 | K13 | Pengaturan | `e2e`: SKD, ambang, tema gelap/terang (warna latar berubah), reset batal dan reset terkonfirmasi. Screenshot 07, 08, 09 |
 | K14 | Persistensi | `e2e`: reload → skor, nama, status pembahasan, pengaturan, catatan tetap ada |
 | K15 | Ekspor/impor | `e2e`: unduhan `tryout-skd-cadangan-2026-12-12.json` valid dan sama dengan localStorage; berkas rusak dan asing ditolak tanpa mengubah data; reset lalu impor memulihkan data persis. `logic`: round-trip dan pembersihan data berbahaya |
@@ -24,6 +24,7 @@ Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), 
 | K17 | PWA offline | `e2e`: manifest valid, ikon 200, SW aktif dan mengendalikan halaman, cangkang ter-cache; `setOffline(true)` lalu reload → aplikasi termuat, data ada, kalender, tambah catatan jalan. Screenshot 12 |
 | K18 | Notifikasi | `e2e`: dengan izin (disimulasikan) tepat 5 menit sebelum Tryout 19.00 muncul satu kali; tanpa izin pengingat tetap mati dan aplikasi berfungsi |
 | K19 | Subpath GitHub Pages | `e2e`: server di `/tryout-skd-repo/` → tidak ada 404, SW ter-scope subpath, offline jalan |
+| Nav | Navigasi disederhanakan jadi 2 tab | `e2e` "Navigasi 2 tab": hanya 2 tautan di navigasi bawah (Tryout, Rekap); tab Tryout memuat timeline hari ini, progres, 10 minggu dan 120 baris tryout; Rekap memuat grafik dan Soal salah; ikon gerigi di pojok kanan atas membuka Pengaturan dan tombol Kembali; tombol "Buka catatan" Minggu 19.30 langsung ke Soal salah; alamat lama diarahkan. Semua tes fitur sebelumnya dijalankan ulang lewat 2 tab. Screenshot 01, 02, 13–16 |
 | Tema | Warna gaya GitHub, solid | `e2e`: CSS tanpa rgba/opacity/gradient/blur; computed style gelap = #0d1117/#161b22/#30363d/#e6edf3 dan terang = #ffffff/#f6f8fa/#d0d7de/#1f2328; semua elemen solid (opacity 1, tanpa gradien); meta theme-color dan manifest ikut; mode otomatis mengikuti sistem. Screenshot 13–16. Putaran kedua: latar peringatan, sorotan, chip, dan pil dibuat netral (warna hanya pada garis tepi dan teks); tes memeriksa SEMUA elemen di 5 halaman dan 2 dialog (+ `::backdrop`) pada tema gelap dan terang: latar harus salah satu warna palet, tanpa alpha/opacity/bayangan/filter/gradien. Tes ini terbukti gagal pada CSS versi sebelumnya (tint merah/biru/kuning) dan lulus pada versi sekarang |
 | K20 | Escape HTML | `e2e`: `<img onerror>` dan `<script>` di catatan dan nama paket tampil sebagai teks, tidak dieksekusi |
 
