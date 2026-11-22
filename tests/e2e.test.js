@@ -328,6 +328,53 @@ function seedState() {
     await g.ctx.close();
   }
 
+  // ---------------------------------------------------------------- Palet solid di semua halaman dan dialog
+  console.log('Warna polos di semua halaman dan dialog (gelap dan terang)');
+  for (const scheme of ['dark', 'light']) {
+    const { ctx, page } = await open('2026-12-12T02:00:00Z', { seed: true, ctx: { colorScheme: scheme } });
+    const audit = () => page.evaluate(() => {
+      const root = getComputedStyle(document.documentElement);
+      const hex = n => { const h = root.getPropertyValue(n).trim(); const v = parseInt(h.slice(1), 16); return 'rgb(' + (v >> 16) + ', ' + (v >> 8 & 255) + ', ' + (v & 255) + ')'; };
+      const allowedBg = ['--bg', '--surface', '--surface2', '--text', '--accent', '--primary', '--ok', '--bad', '--warn', '--backdrop', '--toast-bg'].map(hex).concat(['rgba(0, 0, 0, 0)']);
+      const bad = [];
+      const alphaRe = /rgba\((?!0, 0, 0, 0\))|\/ ?0?\.\d|color\(|hsla/;
+      document.querySelectorAll('body *').forEach(el => {
+        for (const pe of [null, '::before', '::after']) {
+          const cs = getComputedStyle(el, pe);
+          if (pe && cs.content === 'none') continue;
+          const nm = el.tagName + (el.className && el.className.baseVal === undefined ? '.' + String(el.className).split(' ')[0] : '') + (pe || '');
+          if (!pe && !(el instanceof SVGElement) && !allowedBg.includes(cs.backgroundColor)) bad.push('latar ' + nm + ' ' + cs.backgroundColor);
+          ['color', 'borderTopColor', 'borderLeftColor', 'outlineColor', 'fill', 'stroke'].forEach(p => { if (cs[p] && alphaRe.test(cs[p])) bad.push(p + ' ' + nm + ' ' + cs[p]); });
+          if (parseFloat(cs.opacity) < 1) bad.push('opacity ' + nm + ' ' + cs.opacity);
+          if (cs.boxShadow !== 'none') bad.push('shadow ' + nm + ' ' + cs.boxShadow);
+          if (cs.backdropFilter && cs.backdropFilter !== 'none') bad.push('backdrop-filter ' + nm);
+          if (cs.filter && cs.filter !== 'none') bad.push('filter ' + nm);
+          if (/gradient/.test(cs.backgroundImage)) bad.push('gradient ' + nm);
+        }
+      });
+      for (const id of ['sheet', 'confirm']) { const b = getComputedStyle(document.getElementById(id), '::backdrop').backgroundColor; if (b !== hex('--backdrop')) bad.push('::backdrop ' + id + ' ' + b); }
+      return bad.slice(0, 8);
+    });
+    for (const h of ['#/hari-ini', '#/kalender', '#/skor', '#/catatan', '#/pengaturan']) {
+      await go(page, h);
+      if (h === '#/skor') { check(scheme + ' ' + h + ' (daftar): warna polos', (await audit()).length === 0, await audit()); await page.click('[data-tab=tren]'); }
+      const bad = await audit();
+      check(scheme + ' ' + h + ': hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)', bad.length === 0, bad);
+    }
+    await go(page, '#/hari-ini');
+    const warnBg = await page.evaluate(() => [getComputedStyle(document.querySelector('.warn')).backgroundColor, getComputedStyle(document.querySelector('.now-card')).backgroundColor, getComputedStyle(document.body).backgroundColor, getComputedStyle(document.querySelector('.card')).backgroundColor]);
+    check(scheme + ': peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)', warnBg[0] === warnBg[3] && warnBg[1] === warnBg[3] && warnBg[0] !== warnBg[2], warnBg);
+    await page.click('.warn [data-open]'); await page.waitForTimeout(100);
+    const bs = await audit();
+    check(scheme + ': dialog detail tryout polos, termasuk ::backdrop', bs.length === 0, bs);
+    await closeSheet(page);
+    await go(page, '#/pengaturan'); await page.click('[data-act=reset]'); await page.waitForTimeout(100);
+    const bc = await audit();
+    check(scheme + ': dialog konfirmasi polos, termasuk ::backdrop', bc.length === 0, bc);
+    await shot(page, '17-dialog-konfirmasi-' + scheme + '-375');
+    await ctx.close();
+  }
+
   // ---------------------------------------------------------------- K16 layout 375 px
   console.log('K16 layout 375 px');
   {
@@ -393,7 +440,7 @@ function seedState() {
     check('service worker aktif dengan scope akar situs', swState.active && swState.scope === base, swState);
     await page.reload(); await page.waitForSelector('#view h1');
     check('halaman dikendalikan service worker setelah muat ulang', await page.evaluate(() => !!navigator.serviceWorker.controller));
-    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v1')).keys()).map(r => new URL(r.url).pathname));
+    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v2')).keys()).map(r => new URL(r.url).pathname));
     check('cangkang aplikasi ter-cache', ['/index.html', '/app.js', '/schedule.js', '/styles.css', '/manifest.webmanifest', '/icons/icon-192.png'].every(p => cached.includes(p)), cached);
     await page.check('[data-done=T001]');
     await ctx.setOffline(true);

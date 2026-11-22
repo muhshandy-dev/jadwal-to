@@ -84,7 +84,7 @@ pada pembukaan berikutnya (kadang perlu dua kali buka). Jika mengubah daftar ber
 
 ```bash
 node tests/logic.test.js                          # 32 tes logika, tanpa dependensi
-npm i -D playwright && node tests/e2e.test.js     # 107 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
+npm i -D playwright && node tests/e2e.test.js     # 125 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
 Jadwal sudah dicocokkan dengan PDF "Jadwal Tryout Disiplin": templat harian, jumlah per hari, rentang tanggal tiap minggu, catatan Natal/Tahun Baru, dan 7 aturan tetap sama.

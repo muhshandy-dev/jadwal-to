@@ -114,6 +114,25 @@ Tema warna gaya GitHub (solid, tanpa transparansi)
   ok    semua elemen: warna solid, opacity 1, tanpa gradien (dibaca dari computed style; latar tanpa warna bawaan dikecualikan)
   ok    otomatis mengikuti sistem gelap
   ok    otomatis mengikuti sistem terang
+Warna polos di semua halaman dan dialog (gelap dan terang)
+  ok    dark #/hari-ini: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/kalender: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/skor (daftar): warna polos
+  ok    dark #/skor: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/catatan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark #/pengaturan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    dark: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
+  ok    dark: dialog detail tryout polos, termasuk ::backdrop
+  ok    dark: dialog konfirmasi polos, termasuk ::backdrop
+  ok    light #/hari-ini: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/kalender: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/skor (daftar): warna polos
+  ok    light #/skor: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/catatan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light #/pengaturan: hanya warna solid dari palet (latar, teks, garis, bayangan, opacity, gradien)
+  ok    light: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
+  ok    light: dialog detail tryout polos, termasuk ::backdrop
+  ok    light: dialog konfirmasi polos, termasuk ::backdrop
 K16 layout 375 px
   ok    #/hari-ini: tanpa scroll horizontal
   ok    #/hari-ini: semua tombol/input minimal 44 px tinggi
@@ -161,4 +180,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-107 pemeriksaan lulus, 0 gagal
+125 pemeriksaan lulus, 0 gagal
