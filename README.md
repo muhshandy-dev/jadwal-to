@@ -12,7 +12,7 @@ Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
 - **Kalender**: 10 minggu, status tiap tryout (selesai, hari ini, terjadwal, terlewat, digeser), catatan Natal/Tahun Baru, 7 aturan tetap.
 - **Skor**: checklist per minggu (selesai, nama paket, TWK/TIU/TKP, total otomatis, status pembahasan, lulus/belum per subtes), grafik tren per subtes dan total, rata-rata per minggu, peringatan skor mentok dan paket dobel.
 - **Catatan**: buku soal salah per subtes dan topik, filter, penanda sudah dibaca ulang; pengingat Minggu 19.30.
-- **Pengaturan**: tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema terang/gelap/otomatis, notifikasi, ekspor/impor, reset dengan konfirmasi.
+- **Pengaturan**: tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub: gelap (#0d1117), terang (#ffffff), atau otomatis mengikuti sistem; semua warna solid tanpa transparansi, notifikasi, ekspor/impor, reset dengan konfirmasi.
 - **Geser tryout**: ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
 
 ## Struktur berkas
@@ -84,7 +84,7 @@ pada pembukaan berikutnya (kadang perlu dua kali buka). Jika mengubah daftar ber
 
 ```bash
 node tests/logic.test.js                          # 32 tes logika, tanpa dependensi
-npm i -D playwright && node tests/e2e.test.js     # 98 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
+npm i -D playwright && node tests/e2e.test.js     # 107 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
 Jadwal sudah dicocokkan dengan PDF "Jadwal Tryout Disiplin": templat harian, jumlah per hari, rentang tanggal tiap minggu, catatan Natal/Tahun Baru, dan 7 aturan tetap sama.

@@ -104,6 +104,16 @@ K13 pengaturan: SKD, ambang, tema
   ok    mode gelap menerapkan data-theme
   ok    warna latar berbeda antara gelap dan terang
   ok    pengaturan bertahan setelah reload
+Tema warna gaya GitHub (solid, tanpa transparansi)
+  ok    CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter
+  ok    gelap: latar #0d1117, kartu #161b22, border #30363d, teks #e6edf3
+  ok    gelap: meta theme-color #0d1117
+  ok    terang: latar #ffffff, kartu #f6f8fa, border #d0d7de, teks #1f2328
+  ok    terang: meta theme-color #ffffff
+  ok    manifest theme_color dan background_color #0d1117
+  ok    semua elemen: warna solid, opacity 1, tanpa gradien (dibaca dari computed style; latar tanpa warna bawaan dikecualikan)
+  ok    otomatis mengikuti sistem gelap
+  ok    otomatis mengikuti sistem terang
 K16 layout 375 px
   ok    #/hari-ini: tanpa scroll horizontal
   ok    #/hari-ini: semua tombol/input minimal 44 px tinggi
@@ -151,4 +161,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-98 pemeriksaan lulus, 0 gagal
+107 pemeriksaan lulus, 0 gagal

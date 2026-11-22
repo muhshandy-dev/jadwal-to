@@ -292,6 +292,42 @@ function seedState() {
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- Tema GitHub, warna solid
+  console.log('Tema warna gaya GitHub (solid, tanpa transparansi)');
+  {
+    const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
+    check('CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter', !/rgba\(|hsla\(|opacity|gradient|blur|backdrop-filter|#[0-9a-fA-F]{8}\b/.test(css));
+    const { ctx, page } = await open('2026-11-23T11:30:00Z', { hash: '#/pengaturan' });
+    const col = async () => page.evaluate(() => { const g = (el, p) => getComputedStyle(el)[p]; const b = document.body, c = document.querySelector('.card'); return { bg: g(b, 'backgroundColor'), card: g(c, 'backgroundColor'), line: g(c, 'borderTopColor'), text: g(b, 'color'), meta: [...document.querySelectorAll('meta[name=theme-color]')].map(m => m.content) }; });
+    await page.click('[data-theme=dark]');
+    const d = await col();
+    check('gelap: latar #0d1117, kartu #161b22, border #30363d, teks #e6edf3', d.bg === 'rgb(13, 17, 23)' && d.card === 'rgb(22, 27, 34)' && d.line === 'rgb(48, 54, 61)' && d.text === 'rgb(230, 237, 243)', d);
+    check('gelap: meta theme-color #0d1117', d.meta.every(x => x === '#0d1117'), d.meta);
+    await page.click('[data-theme=light]');
+    const l = await col();
+    check('terang: latar #ffffff, kartu #f6f8fa, border #d0d7de, teks #1f2328', l.bg === 'rgb(255, 255, 255)' && l.card === 'rgb(246, 248, 250)' && l.line === 'rgb(208, 215, 222)' && l.text === 'rgb(31, 35, 40)', l);
+    check('terang: meta theme-color #ffffff', l.meta.every(x => x === '#ffffff'), l.meta);
+    const man = await page.evaluate(async () => (await fetch('manifest.webmanifest')).json());
+    check('manifest theme_color dan background_color #0d1117', man.theme_color === '#0d1117' && man.background_color === '#0d1117', man);
+    await page.click('[data-theme=dark]');
+    const alpha = await page.evaluate(() => { const bad = []; document.querySelectorAll('*').forEach(el => { const cs = getComputedStyle(el); ['color', 'backgroundColor', 'borderTopColor', 'outlineColor'].forEach(p => { if (/rgba|\/ ?0?\.\d/.test(cs[p]) && cs[p] !== 'rgba(0, 0, 0, 0)') bad.push(el.tagName + '.' + p + '=' + cs[p]); }); if (parseFloat(cs.opacity) < 1) bad.push(el.tagName + '.opacity'); if (cs.backdropFilter && cs.backdropFilter !== 'none') bad.push('backdrop'); if (/gradient/.test(cs.backgroundImage)) bad.push('gradient'); }); return bad.slice(0, 5); });
+    check('semua elemen: warna solid, opacity 1, tanpa gradien (dibaca dari computed style; latar tanpa warna bawaan dikecualikan)', alpha.length === 0, alpha);
+    await page.emulateMedia({ colorScheme: 'dark' }); await page.click('[data-theme=auto]'); await page.waitForTimeout(80);
+    check('otomatis mengikuti sistem gelap', (await col()).bg === 'rgb(13, 17, 23)');
+    await page.emulateMedia({ colorScheme: 'light' }); await page.waitForTimeout(80);
+    check('otomatis mengikuti sistem terang', (await col()).bg === 'rgb(255, 255, 255)');
+    await ctx.close();
+  }
+
+  {
+    const g = await open('2026-12-12T02:00:00Z', { seed: true, ctx: { colorScheme: 'dark' } });
+    await shot(g.page, '13-gelap-hari-ini-375');
+    await go(g.page, '#/kalender'); await g.page.waitForTimeout(100); await shot(g.page, '14-gelap-kalender-375');
+    await go(g.page, '#/skor'); await g.page.click('[data-tab=tren]'); await shot(g.page, '15-gelap-tren-375');
+    await go(g.page, '#/catatan'); await shot(g.page, '16-gelap-catatan-375');
+    await g.ctx.close();
+  }
+
   // ---------------------------------------------------------------- K16 layout 375 px
   console.log('K16 layout 375 px');
   {

@@ -333,7 +333,7 @@
     var t = state.settings.theme, root = document.documentElement;
     if (t === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
     var dark = t === 'dark' || (t === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    var m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', dark ? '#0f1720' : '#f4f6f8');
+    document.querySelectorAll('meta[name=theme-color]').forEach(function (m) { m.setAttribute('content', dark ? '#0d1117' : '#ffffff'); });
   }
   function afterChange() { save(); }
 
@@ -425,7 +425,7 @@
     else if (day.events.some(function (e) { return e.flex; })) note = ' Hari itu padat; atur jam mulai.';
     toast('Tryout #' + t.n + ' dijadwalkan ' + S.fmtLong(date) + '.' + note);
     renderTryoutSheet();
-    var m2 = document.getElementById('move-msg'); if (m2) m2.textContent = note.trim();
+    var m2 = document.getElementById('move-msg'); if (m2) m2.textContent = 'Dijadwalkan ' + S.fmtLong(date) + '.' + note;
   }
   function saveNote() {
     var sub = document.getElementById('n-sub').value, topic = document.getElementById('n-topic').value.trim(), note = document.getElementById('n-note').value.trim(), err = document.getElementById('n-err');
