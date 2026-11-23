@@ -1,7 +1,10 @@
 # Jadwal Tryout SKD
 
-Aplikasi web statis (HTML, CSS, JavaScript murni) untuk mengatur 120 tryout SKD CPNS: 12 tryout per minggu, 10 minggu,
-Senin 23 November 2026 sampai Minggu 31 Januari 2027. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
+Aplikasi web statis (HTML, CSS, JavaScript murni) untuk mengatur 120 tryout SKD CPNS.
+**Jadwal (revisi 23 November 2026):** mulai Selasa 24 November 2026, 2 tryout per hari (siang 13.15 dan malam 19.00), hanya Senin–Kamis.
+120 tryout = 60 hari tryout, jadi tryout terakhir **Senin 8 Maret 2027** (16 minggu: 6 tryout di minggu 1, 8 per minggu di minggu 2–15, 2 di minggu 16).
+Jumat, Sabtu, dan Minggu bebas tryout (Minggu 19.30 tetap ada pengingat baca ulang buku soal salah).
+**Perhatian:** SKD bawaan di aplikasi masih 8 Februari 2027 (perkiraan). Sampai tanggal itu hanya 86 tryout yang sempat dikerjakan; 34 sisanya jatuh sesudahnya, dan aplikasi menampilkan peringatan sampai Anda mengubah tanggal SKD di Pengaturan sesuai pengumuman resmi. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
 Tanpa backend, tanpa login. Semua data disimpan di `localStorage` perangkat; cadangan lewat Ekspor/Impor JSON.
 
 Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
@@ -10,7 +13,7 @@ Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
 
 Navigasi sederhana: **2 tab** di bawah (Tryout, Rekap) dan ikon gerigi di pojok kanan atas untuk Pengaturan.
 
-- **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/120 dan x/12), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 10 minggu yang bisa dibuka. Tiap minggu berisi 12 tryout dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
+- **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/120 dan per minggu), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 16 minggu yang bisa dibuka. Tiap minggu berisi tryout-nya dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
 - **Tab Rekap**: *Skor* (grafik tren TWK/TIU/TKP/total dengan garis ambang, rata-rata per minggu, peringatan skor mentok) dan *Soal salah* (buku soal salah per subtes dan topik, filter, penanda sudah dibaca ulang; pengingat Minggu 19.30).
 - **Pengaturan** (ikon gerigi): tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub (gelap #0d1117, terang #ffffff, atau otomatis mengikuti sistem; semua warna solid tanpa transparansi), notifikasi, ekspor/impor, reset dengan konfirmasi, dan 7 aturan tetap.
 - Alamat lama (`#/hari-ini`, `#/kalender`, `#/skor`, `#/catatan`) masih diarahkan ke tab yang sesuai.
@@ -72,19 +75,19 @@ pada pembukaan berikutnya (kadang perlu dua kali buka). Jika mengubah daftar ber
 
 ## Aturan perilaku yang perlu diketahui
 
-- **Geser** hanya ke hari lain di minggu yang sama, supaya tiap minggu tetap 12 dan total tetap 120. Tryout dianggap *terlewat* bila belum selesai dan tanggalnya sudah lewat (WITA); peringatannya hilang bila digeser ke hari ini atau sesudahnya, atau ditandai selesai.
-- Tryout yang digeser ke hari lain mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis 16.30, 14.00, 11.30; Jumat 16.00, 13.30, 11.00; Sabtu 19.00; Minggu 13.15 dan 16.00). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
+- **Geser** hanya ke hari lain di minggu yang sama, supaya jumlah tryout tiap minggu tetap dan total tetap 120. Tryout dianggap *terlewat* bila belum selesai dan tanggalnya sudah lewat (WITA); peringatannya hilang bila digeser ke hari ini atau sesudahnya, atau ditandai selesai.
+- Tryout yang digeser ke hari lain mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis 09.30 dan 16.00; Jumat/Sabtu siang 13.15, malam 19.00, 09.30, 16.00; Minggu 13.15, 09.30, 16.00). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
 - **Total** dihitung bila ketiga skor terisi. Skor valid: TWK 0–150, TIU 0–175, TKP 0–225 (bilangan bulat). Mengisi skor otomatis menandai tryout selesai.
 - **Skor mentok**: rata-rata mingguan TWK atau TKP, tiga minggu berurutan, minimal 3 tryout bernilai per minggu, tidak naik dua kali berturut-turut (sama atau turun).
 - **Paket dobel**: nama dianggap sama bila huruf besar/kecil, spasi, dan tanda baca diabaikan.
-- Jika tanggal SKD diubah lebih awal dari 31 Januari, aplikasi memberi peringatan (jumlah tryout yang jatuh pada/setelah hari SKD) tetapi **tidak** mengurangi total otomatis.
+- Jika tanggal SKD diubah lebih awal dari tryout terakhir (8 Maret 2027), aplikasi memberi peringatan (jumlah tryout yang jatuh pada/setelah hari SKD) tetapi **tidak** mengurangi total otomatis.
 - **Notifikasi** bersifat opsional dan hanya muncul selama aplikasi terbuka atau masih hidup di latar belakang (tanpa server push, peramban tidak bisa membangunkan aplikasi yang tertutup). Tanpa izin notifikasi semua fitur lain tetap jalan.
 
 ## Pengujian
 
 ```bash
-node tests/logic.test.js                          # 32 tes logika, tanpa dependensi
+node tests/logic.test.js                          # 38 tes logika, tanpa dependensi
 npm i -D playwright && node tests/e2e.test.js     # 128 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
-Jadwal sudah dicocokkan dengan PDF "Jadwal Tryout Disiplin": templat harian, jumlah per hari, rentang tanggal tiap minggu, catatan Natal/Tahun Baru, dan 7 aturan tetap sama.
+Catatan: versi pertama aplikasi mengikuti PDF "Jadwal Tryout Disiplin" (12 tryout per minggu, Senin–Minggu). Sejak revisi 23 November 2026 jadwal memakai pola di atas (2 tryout per hari, Senin–Kamis); 7 aturan tetap dari PDF tetap berlaku, kecuali aturan ke-6 yang menyesuaikan.

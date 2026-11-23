@@ -7,11 +7,12 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var START_DATE = '2026-11-23';
-  var WEEKS = 10;
-  var PER_WEEK = 12;
-  var TOTAL = WEEKS * PER_WEEK;
-  var PER_DAY = [1, 1, 1, 1, 2, 4, 2]; // Senin..Minggu
+  // Revisi 2026-11-23: mulai Selasa 24 Nov 2026, 2 tryout per hari (siang dan malam), hanya Senin-Kamis.
+  // 120 tryout = 60 hari Senin-Kamis, tryout terakhir Senin 8 Maret 2027. Minggu 1 dihitung dari Senin 23 Nov.
+  var START_DATE = '2026-11-23'; // Senin awal minggu 1
+  var FIRST_DATE = '2026-11-24'; // tryout pertama
+  var TOTAL = 120;
+  var PER_DAY = [2, 2, 2, 2, 0, 0, 0]; // Senin..Minggu
   var DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   var MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   var HOLIDAYS = { '2026-12-25': 'Hari Raya Natal', '2027-01-01': 'Tahun Baru 2027' };
@@ -40,17 +41,21 @@
   /* ---------- Jadwal dasar (120 tryout) ---------- */
   function buildBase() {
     var out = [], n = 0, s0 = dayNum(START_DATE);
-    for (var w = 1; w <= WEEKS; w++) {
-      for (var d = 0; d < 7; d++) {
-        for (var k = 0; k < PER_DAY[d]; k++) {
-          n++;
-          out.push({ id: 'T' + (n < 100 ? (n < 10 ? '00' : '0') : '') + n, n: n, week: w, dayIdx: d, slot: k, date: dateStr(s0 + 7 * (w - 1) + d) });
-        }
+    for (var dn = dayNum(FIRST_DATE); n < TOTAL; dn++) {
+      var d = ((dn + 3) % 7 + 7) % 7;
+      for (var k = 0; k < PER_DAY[d] && n < TOTAL; k++) {
+        n++;
+        out.push({ id: 'T' + (n < 100 ? (n < 10 ? '00' : '0') : '') + n, n: n, week: Math.floor((dn - s0) / 7) + 1, dayIdx: d, slot: k, date: dateStr(dn) });
       }
     }
     return out;
   }
   var BASE = buildBase();
+  var WEEKS = BASE[BASE.length - 1].week;
+  var WEEK_COUNTS = [];
+  for (var wi = 0; wi < WEEKS; wi++) WEEK_COUNTS.push(0);
+  BASE.forEach(function (b) { WEEK_COUNTS[b.week - 1]++; });
+  var LAST_TRYOUT_DATE = BASE[BASE.length - 1].date;
   var BY_ID = {};
   BASE.forEach(function (b) { BY_ID[b.id] = b; });
   function weekStart(w) { return addDays(START_DATE, 7 * (w - 1)); }
@@ -59,32 +64,26 @@
     if (k < 0 || k >= WEEKS * 7) return null;
     return Math.floor(k / 7) + 1;
   }
-  var LAST_DATE = addDays(START_DATE, WEEKS * 7 - 1);
+  var LAST_DATE = addDays(START_DATE, WEEKS * 7 - 1); // Minggu akhir minggu terakhir
 
   /* ---------- Templat harian (menit sejak 00.00) ---------- */
   function T(h, m) { return h * 60 + (m || 0); }
   function block(s) { return { to: [s, s + 100], bahas: [s + 105, s + 150] }; }
-  function sl(a, b, c, d) { return { to: [a, b], bahas: [c, d] }; }
+  function slot(name, a, b, c, d) { return { name: name, to: [a, b], bahas: [c, d] }; }
+  var SIANG = slot('siang', T(13, 15), T(14, 55), T(15), T(15, 45));
+  var MALAM = slot('malam', T(19), T(20, 40), T(20, 50), T(21, 50));
   var TEMPLATES = {
-    weekday: {
-      slots: [sl(T(19), T(20, 40), T(20, 50), T(21, 50))],
+    weekday: { // Senin-Kamis: 2 tryout (siang dan malam)
+      slots: [SIANG, MALAM],
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(16, 30)), block(T(14)), block(T(11, 30))]
+      extras: [block(T(9, 30)), block(T(16))]
     },
-    friday: {
-      slots: [sl(T(18, 30), T(20, 10), T(20, 15), T(21)), sl(T(21, 10), T(22, 50), T(22, 55), T(23, 40))],
-      fixed: [{ kind: 'tidur', label: 'Tidur', start: T(23, 45), end: T(24) }],
-      extras: [block(T(16)), block(T(13, 30)), block(T(11))]
-    },
-    saturday: {
-      slots: [sl(T(7), T(8, 40), T(8, 45), T(9, 30)), sl(T(9, 45), T(11, 25), T(11, 30), T(12, 15)), sl(T(13, 15), T(14, 55), T(15), T(15, 45)), sl(T(16), T(17, 40), T(17, 45), T(18, 30))],
-      fixed: [{ kind: 'istirahat', label: 'Istirahat, makan, salat', start: T(12, 15), end: T(13, 15) }, { kind: 'istirahat', label: 'Istirahat / AI trainer', start: T(18, 30), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(19))]
-    },
+    friday: { slots: [], fixed: [{ kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }], extras: [SIANG, MALAM, block(T(9, 30)), block(T(16))] },
+    saturday: { slots: [], fixed: [{ kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }], extras: [SIANG, MALAM, block(T(9, 30)), block(T(16))] },
     sunday: {
-      slots: [sl(T(7), T(8, 40), T(8, 45), T(9, 30)), sl(T(9, 45), T(11, 25), T(11, 30), T(12, 15))],
-      fixed: [{ kind: 'istirahat', label: 'Istirahat / AI trainer', start: T(12, 15), end: T(19, 30) }, { kind: 'baca', label: 'Baca ulang buku soal salah', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(13, 15)), block(T(16))]
+      slots: [],
+      fixed: [{ kind: 'baca', label: 'Baca ulang buku soal salah', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+      extras: [SIANG, block(T(9, 30)), block(T(16))]
     }
   };
   function templateFor(idx) { return idx < 4 ? TEMPLATES.weekday : idx === 4 ? TEMPLATES.friday : idx === 5 ? TEMPLATES.saturday : TEMPLATES.sunday; }
@@ -162,7 +161,7 @@
       var date = u.date || b.date;
       var start = typeof u.start === 'number' ? u.start : null;
       return {
-        id: b.id, n: b.n, week: b.week, baseDate: b.date, date: date, start: start,
+        id: b.id, n: b.n, week: b.week, slot: b.slot, baseDate: b.date, date: date, start: start,
         moved: date !== b.date || start !== null,
         done: !!u.done, reviewed: !!u.reviewed, name: u.name || '',
         twk: num(u.twk), tiu: num(u.tiu), tkp: num(u.tkp)
@@ -308,7 +307,7 @@
     var seq = 0, evs = [], busy = [];
     function add(t, slot) {
       seq++;
-      var lab = multi ? ' ' + seq : '';
+      var lab = slot && slot.name ? ' ' + slot.name : (multi ? ' ' + seq : '');
       if (!slot) { evs.push({ kind: 'tryout', label: 'Tryout' + lab, start: null, end: null, toId: t.id, flex: true }); return; }
       evs.push({ kind: 'tryout', label: 'Tryout' + lab, start: slot.to[0], end: slot.to[1], toId: t.id });
       evs.push({ kind: 'bahas', label: 'Pembahasan', start: slot.bahas[0], end: slot.bahas[1], toId: t.id });
@@ -319,6 +318,7 @@
     });
     custom.forEach(function (t) { add(t, block(t.start)); });
     tpl.fixed.forEach(function (f) {
+      if (f.kind === 'santai' && !mine.length) return;
       if (f.kind === 'santai' || f.kind === 'istirahat') {
         subtract(f, busy).forEach(function (p) { evs.push({ kind: f.kind, label: f.label, start: p[0], end: p[1] }); });
       } else evs.push({ kind: f.kind, label: f.label, start: f.start, end: f.end });
@@ -376,7 +376,7 @@
   }
 
   return {
-    START_DATE: START_DATE, LAST_DATE: LAST_DATE, WEEKS: WEEKS, PER_WEEK: PER_WEEK, TOTAL: TOTAL, PER_DAY: PER_DAY,
+    START_DATE: START_DATE, FIRST_DATE: FIRST_DATE, LAST_DATE: LAST_DATE, LAST_TRYOUT_DATE: LAST_TRYOUT_DATE, WEEKS: WEEKS, WEEK_COUNTS: WEEK_COUNTS, TOTAL: TOTAL, PER_DAY: PER_DAY,
     DAY_NAMES: DAY_NAMES, MONTHS: MONTHS, HOLIDAYS: HOLIDAYS, MAX: MAX, SUBTESTS: SUBTESTS, TOPICS: TOPICS,
     DEFAULT_SETTINGS: DEFAULT_SETTINGS, MIN_PER_WEEK_FOR_TREND: MIN_PER_WEEK_FOR_TREND,
     BASE: BASE, TEMPLATES: TEMPLATES,

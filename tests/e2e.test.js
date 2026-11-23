@@ -36,14 +36,13 @@ function startServer(prefix) {
 function seedState() {
   const st = S.newState();
   const l = S.tryoutList(st);
-  const twk = { 1: 62, 2: 62, 3: 61 }, tkp = { 1: 150, 2: 158, 3: 166 };
+  const twk = { 1: 62, 2: 62, 3: 61 }, tkp = { 1: 150, 2: 158, 3: 166 }; // TWK tidak naik 3 minggu, TKP naik
   let k = 0;
   l.forEach(t => {
     if (t.week > 3) return;
-    if (t.week === 3 && ['T025', 'T026'].indexOf(t.id) >= 0) return; // terlewat (Senin dan Selasa minggu 3)
-    if (t.week === 3 && t.date > '2026-12-11') return;
+    if (['T015', 'T016'].indexOf(t.id) >= 0) return; // terlewat (Senin 7 Des, siang dan malam)
     k++;
-    S.setField(st, t.id, { done: true, reviewed: t.week < 3 || t.date < '2026-12-11', name: 'Paket Bimbel ' + String.fromCharCode(64 + (k % 26 || 26)) + ' ' + k, twk: twk[t.week] + (k % 3), tiu: 78 + (k % 7), tkp: tkp[t.week] + (k % 5) });
+    S.setField(st, t.id, { done: true, reviewed: t.date < '2026-12-10', name: 'Paket Bimbel ' + String.fromCharCode(64 + (k % 26 || 26)) + ' ' + k, twk: twk[t.week] + (k % 2 ? 1 : -1), tiu: 78 + (k % 7), tkp: tkp[t.week] + (k % 3) });
   });
   st.wrong.push({ id: 'w1', subtest: 'TWK', topic: 'Pancasila', note: 'Sila ke-3: persatuan Indonesia, bukan kerakyatan.', created: '2026-11-25', reads: 1, lastRead: '2026-11-29' });
   st.wrong.push({ id: 'w2', subtest: 'TKP', topic: 'Pelayanan publik', note: 'Pilih jawaban yang menjelaskan prosedur dengan ramah dan tetap sesuai aturan.', created: '2026-12-02', reads: 0, lastRead: '' });
@@ -87,21 +86,21 @@ function seedState() {
   const stateOf = page => page.evaluate(() => JSON.parse(localStorage.getItem('tryoutSkd.v1')));
 
   // ---------------------------------------------------------------- K4 Hari Ini
-  console.log('K4 Hari Ini (Senin 23 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)');
+  console.log('K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)');
   {
-    const { ctx, page, errors } = await open('2026-11-23T11:30:00Z');
+    const { ctx, page, errors } = await open('2026-11-24T11:30:00Z');
     const head = await page.textContent('#view');
-    check('tanggal ditampilkan dalam WITA', /Senin, 23 November 2026/.test(head), head);
+    check('tanggal ditampilkan dalam WITA', /Selasa, 24 November 2026/.test(head), head);
     const nowTxt = await page.textContent('.ev.now');
-    check('kegiatan berjalan disorot: Tryout 19.00–20.40', /19\.00–20\.40/.test(nowTxt) && /Tryout/.test(nowTxt) && /sedang berjalan/.test(nowTxt), nowTxt);
-    check('timeline Senin punya 4 kegiatan', (await page.locator('.timeline .ev').count()) === 4);
+    check('kegiatan berjalan disorot: Tryout malam 19.00–20.40', /19\.00–20\.40/.test(nowTxt) && /Tryout/.test(nowTxt) && /sedang berjalan/.test(nowTxt), nowTxt);
+    check('timeline Selasa: 6 kegiatan (tryout siang, bahas, tryout malam, bahas, santai, tidur)', (await page.locator('.timeline .ev').count()) === 6);
     const cd0 = await page.textContent('#cd');
     check('hitung mundur ke kegiatan berikutnya (Pembahasan 20.50), kira-kira 01:20:00', /^01:(19|20):\d\d$/.test(cd0), cd0);
     await page.clock.runFor(5000);
     const cd1 = await page.textContent('#cd');
     const sec = s => { const p = s.split(':').map(Number); return p[0] * 3600 + p[1] * 60 + p[2]; };
     check('hitung mundur berkurang tiap detik', sec(cd0) - sec(cd1) >= 4 && sec(cd0) - sec(cd1) <= 7, [cd0, cd1]);
-    check('SKD H-77 dan progres 0/120', /H-77/.test(await page.textContent('.card')) && /0\/120/.test(await page.textContent('.card')));
+    check('SKD H-76 dan progres 0/120', /H-76/.test(await page.textContent('.card')) && /0\/120/.test(await page.textContent('.card')));
     await page.clock.runFor(81 * 60 * 1000); // lewat 20.50
     const nowTxt2 = await page.textContent('.ev.now');
     check('setelah 81 menit, sorotan pindah ke Pembahasan', /Pembahasan/.test(nowTxt2), nowTxt2);
@@ -112,7 +111,7 @@ function seedState() {
   // ---------------------------------------------------------------- K5 K14 checklist + persistensi + K9
   console.log('K5/K14/K9 checklist, skor, persistensi, paket dobel');
   {
-    const { ctx, page } = await open('2026-11-23T11:30:00Z');
+    const { ctx, page } = await open('2026-11-24T11:30:00Z');
     await page.check('[data-done=T001]');
     check('centang selesai di timeline menaikkan progres ke 1/120', /1\/120/.test(await page.textContent('.card')));
     await page.click('.ev.k-tryout [data-open=T001]');
@@ -142,41 +141,38 @@ function seedState() {
     await ctx.close();
   }
 
-  // ---------------------------------------------------------------- K3 geser libur + K8 terlewat
-  console.log('K3/K8 geser tryout Natal dan peringatan terlewat');
+  // ---------------------------------------------------------------- K3 geser + K8 terlewat
+  console.log('K3/K8 geser tryout (termasuk ke Jumat Natal) dan peringatan terlewat');
   {
     const { ctx, page } = await open('2026-12-21T04:00:00Z'); // Senin 21 Des 12.00 WITA
-    const warn = await page.textContent('.warn:has-text("Natal")');
-    check('peringatan Natal muncul sebelum hari H', /Hari Raya Natal/.test(warn) && /Jum 25 Des/.test(warn), warn);
-    check('terlewat: ada tryout minggu-minggu lalu yang belum selesai', /tryout terlewat/.test(await page.textContent('#view')));
-    const natal = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts);
-    check('Jumat 25 Des punya 2 tryout', natal.length === 2, natal);
-    await page.click('.warn:has-text("Natal") [data-open="' + natal[0] + '"]');
+    check('peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)', /tryout terlewat/.test(await page.textContent('#view')));
+    const thu = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-24').tryouts);
+    check('Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) tidak ada tryout', thu.length === 2 && (await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts.length)) === 0, thu);
+    await go(page, '#/tryout');
+    check('minggu 5 menampilkan catatan Natal', /Natal jatuh Jumat 25 Des/.test(await page.textContent('details[data-w="5"]')));
+    await page.click('details[data-w="5"] [data-open="' + thu[0] + '"]');
     const opts = await page.$$eval('#f-date option', o => o.map(x => x.value));
     check('pilihan geser hanya 7 hari di minggu yang sama (21–27 Des)', opts.join() === '2026-12-21,2026-12-22,2026-12-23,2026-12-24,2026-12-25,2026-12-26,2026-12-27', opts);
-    await page.selectOption('#f-date', '2026-12-26');
+    await page.selectOption('#f-date', '2026-12-25');
     await page.click('[data-act=move]');
-    check('toast konfirmasi geser', /dijadwalkan Sabtu, 26 Desember 2026/.test(await page.textContent('#toast')));
+    check('toast konfirmasi geser ke Jumat 25 Desember', /dijadwalkan Jumat, 25 Desember 2026/.test(await page.textContent('#toast')) || /Dijadwalkan Jumat, 25 Desember 2026/.test(await page.textContent('#move-msg')));
     await closeSheet(page);
-    let counts = await page.evaluate(id0 => { const l = Sked.tryoutList(__app.state), c = {}; l.forEach(t => { c[t.week] = (c[t.week] || 0) + 1; }); return { n: l.length, c: Object.values(c), moved: Sked.getTryout(__app.state, id0).moved }; }, natal[0]);
-    check('setelah geser: total tetap 120, tiap minggu 12, tryout bertanda digeser', counts.n === 120 && counts.c.length === 10 && counts.c.every(x => x === 12) && counts.moved, counts);
-    check('peringatan Natal tinggal 1 tryout', (await page.textContent('.warn:has-text("Natal")')).match(/: 1 tryout bisa digeser/) !== null);
+    const inv = await page.evaluate(() => { const l = Sked.tryoutList(__app.state), c = {}; l.forEach(t => { c[t.week] = (c[t.week] || 0) + 1; }); return { n: l.length, same: JSON.stringify(Object.values(c)) === JSON.stringify(Sked.WEEK_COUNTS), moved: Sked.tryoutList(__app.state).filter(t => t.moved).length }; });
+    check('setelah geser: total tetap 120, jumlah tiap minggu tetap, 1 tryout bertanda digeser', inv.n === 120 && inv.same && inv.moved === 1, inv);
+    check('peringatan: tryout di hari libur Natal bisa digeser', /Hari Raya Natal, Jum 25 Des: 1 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
     await page.click('.warn:has-text("Natal") [data-open]');
-    await page.selectOption('#f-date', '2026-12-23');
-    await page.fill('#f-time', '08:00');
+    await page.selectOption('#f-date', '2026-12-26');
+    await page.fill('#f-time', '10:00');
     await page.click('[data-act=move]');
     await closeSheet(page);
-    check('peringatan Natal hilang setelah kedua tryout digeser', (await page.locator('.warn:has-text("Natal")').count()) === 0);
-    await go(page, '#/kalender');
-    const cal = await page.textContent('details.week[data-w="5"]');
-    check('minggu 5 memuat catatan Natal dan tryout yang digeser bertanda ↔', /Natal/.test(cal) && /↔/.test(cal), cal.slice(0, 200));
-    await page.click('details[data-w="5"] [data-open="' + natal[1] + '"]');
+    check('peringatan Natal hilang setelah tryout digeser dari hari libur', (await page.locator('.warn:has-text("Natal")').count()) === 0);
+    check('minggu 5: tryout geseran bertanda ↔', /↔/.test(await page.textContent('details[data-w="5"]')));
+    await page.click('details[data-w="5"] [data-open="' + thu[0] + '"]');
     await page.click('[data-act=unmove]');
-    check('kembalikan ke jadwal awal (Jumat 25 Des)', (await page.evaluate(id => Sked.getTryout(__app.state, id).date, natal[1])) === '2026-12-25');
+    check('kembalikan ke jadwal awal (Kamis 24 Des)', (await page.evaluate(id => Sked.getTryout(__app.state, id).date, thu[0])) === '2026-12-24');
     await closeSheet(page);
-    // Tahun Baru
-    const tb = await page.evaluate(() => Sked.buildDay(__app.state, '2027-01-01').tryouts);
-    check('Jumat 1 Jan 2027: 2 tryout, bisa digeser ke Kamis 31 Des atau Sabtu 2 Jan, tidak ke Senin 4 Jan', tb.length === 2 && await page.evaluate(id => Sked.moveTryout(__app.state, id, '2026-12-31').ok && Sked.moveTryout(__app.state, id, '2027-01-02').ok && !Sked.moveTryout(__app.state, id, '2027-01-04').ok, tb[0]));
+    const ny = await page.evaluate(() => { const id = Sked.buildDay(__app.state, '2026-12-31').tryouts[0]; return [Sked.moveTryout(__app.state, id, '2027-01-01').ok, Sked.moveTryout(__app.state, id, '2027-01-04').ok]; });
+    check('Tahun Baru: Kamis 31 Des bisa digeser ke Jumat 1 Jan, tidak ke Senin 4 Jan (minggu lain)', ny[0] === true && ny[1] === false, ny);
     await ctx.close();
   }
 
@@ -274,10 +270,10 @@ function seedState() {
   // ---------------------------------------------------------------- K13 pengaturan
   console.log('K13 pengaturan: SKD, ambang, tema');
   {
-    const { ctx, page } = await open('2026-11-23T11:30:00Z', { hash: '#/pengaturan' });
+    const { ctx, page } = await open('2026-11-24T11:30:00Z', { hash: '#/pengaturan' });
     await page.fill('#skd', '2027-02-15'); await page.dispatchEvent('#skd', 'change');
     await go(page, '#/hari-ini');
-    check('ubah tanggal SKD ke 15 Feb: hitung mundur H-84', /H-84/.test(await page.textContent('.card')));
+    check('ubah tanggal SKD ke 15 Feb: hitung mundur H-83', /H-83/.test(await page.textContent('.card')));
     await go(page, '#/pengaturan');
     await page.fill('#skd', '2027-01-20'); await page.dispatchEvent('#skd', 'change');
     await go(page, '#/hari-ini');
@@ -307,7 +303,7 @@ function seedState() {
     const h1 = async () => { await page.waitForTimeout(120); return page.textContent('#view h1'); };
     const cur = async () => { await page.waitForTimeout(40); return page.$$eval('nav a[aria-current=page]', a => a.map(x => x.textContent.trim()).join()); };
     check('alamat lama #/hari-ini membuka tab Tryout', (await h1()) === 'Tryout' && (await cur()) === 'Tryout');
-    check('tab Tryout memuat timeline hari ini, progres, dan 10 minggu dengan 120 baris tryout', (await page.locator('.timeline .ev').count()) > 3 && (await page.locator('details.week[data-w]').count()) === 10 && (await page.locator('li.item').count()) === 120 && (await page.locator('[role=progressbar]').count()) > 10);
+    check('tab Tryout memuat timeline hari ini, progres, dan 16 minggu dengan 120 baris tryout', (await page.locator('.timeline .ev').count()) > 1 && (await page.locator('details.week[data-w]').count()) === 16 && (await page.locator('li.item').count()) === 120 && (await page.locator('[role=progressbar]').count()) > 10);
     check('hanya 2 tautan di navigasi bawah', (await page.locator('nav.bottom a').count()) === 2);
     await page.click('nav a[href="#/rekap"]');
     check('tab Rekap aktif: grafik skor', (await h1()) === 'Rekap' && (await cur()) === 'Rekap' && (await page.locator('[data-series]').count()) === 4);
@@ -331,7 +327,7 @@ function seedState() {
   {
     const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
     check('CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter', !/rgba\(|hsla\(|opacity|gradient|blur|backdrop-filter|#[0-9a-fA-F]{8}\b/.test(css));
-    const { ctx, page } = await open('2026-11-23T11:30:00Z', { hash: '#/pengaturan' });
+    const { ctx, page } = await open('2026-11-24T11:30:00Z', { hash: '#/pengaturan' });
     const col = async () => page.evaluate(() => { const g = (el, p) => getComputedStyle(el)[p]; const b = document.body, c = document.querySelector('.card'); return { bg: g(b, 'backgroundColor'), card: g(c, 'backgroundColor'), line: g(c, 'borderTopColor'), text: g(b, 'color'), meta: [...document.querySelectorAll('meta[name=theme-color]')].map(m => m.content) }; });
     await page.click('[data-theme=dark]');
     const d = await col();
@@ -435,37 +431,37 @@ function seedState() {
   // ---------------------------------------------------------------- K18 notifikasi
   console.log('K18 notifikasi (izin diberikan dan ditolak)');
   {
-    const a = await open('2026-11-23T10:56:00Z', { grant: true, notifSpy: true, hash: '#/pengaturan' }); // 18.56 WITA, TO 19.00, ingatkan 5 menit sebelum
+    const a = await open('2026-11-24T10:56:00Z', { grant: true, notifSpy: true, hash: '#/pengaturan' }); // 18.56 WITA, TO 19.00, ingatkan 5 menit sebelum
     await a.page.click('[data-act=notif-toggle]'); await a.page.waitForTimeout(200);
     check('izin diberikan: pengingat aktif', (await stateOf(a.page)).settings.notify === true);
     await a.page.clock.runFor(11000);
     await a.page.waitForTimeout(200);
     const n = await a.page.evaluate(() => window.__notifs);
-    check('notifikasi muncul 5 menit sebelum Tryout 19.00', n.length === 1 && /Tryout · 19\.00/.test(n[0].t) && /5 menit/.test(n[0].b), n);
+    check('notifikasi muncul 5 menit sebelum Tryout malam 19.00', n.length === 1 && /Tryout malam · 19\.00/.test(n[0].t) && /5 menit/.test(n[0].b), n);
     await a.page.clock.runFor(20000);
     check('tidak dikirim dobel', (await a.page.evaluate(() => window.__notifs.length)) === 1);
     await a.ctx.close();
-    const b = await open('2026-11-23T10:56:00Z', { hash: '#/pengaturan' });
+    const b = await open('2026-11-24T10:56:00Z', { hash: '#/pengaturan' });
     await b.page.click('[data-act=notif-toggle]'); await b.page.waitForTimeout(300);
     const stb = (await stateOf(b.page)) || { settings: { notify: false } };
     check('izin ditolak/tidak ada: pengingat tetap nonaktif, aplikasi tetap berfungsi', stb.settings.notify === false && /tetap berfungsi/.test((await b.page.textContent('#toast')) + (await b.page.textContent('#notif-status'))));
     await go(b.page, '#/hari-ini');
-    check('Hari Ini tetap tampil tanpa notifikasi', (await b.page.locator('.timeline .ev').count()) === 4);
+    check('Hari Ini tetap tampil tanpa notifikasi', (await b.page.locator('.timeline .ev').count()) === 6);
     await b.ctx.close();
   }
 
   // ---------------------------------------------------------------- Data rusak
   console.log('Ketahanan: localStorage rusak');
   {
-    const { ctx, page, errors } = await open('2026-11-23T11:30:00Z', { rawStorage: '{rusak!!' });
-    check('data rusak: aplikasi tetap jalan dengan data baru dan cadangan disimpan', (await page.locator('.timeline .ev').count()) === 4 && (await page.evaluate(() => localStorage.getItem('tryoutSkd.v1.rusak'))) === '{rusak!!', errors);
+    const { ctx, page, errors } = await open('2026-11-24T11:30:00Z', { rawStorage: '{rusak!!' });
+    check('data rusak: aplikasi tetap jalan dengan data baru dan cadangan disimpan', (await page.locator('.timeline .ev').count()) === 6 && (await page.evaluate(() => localStorage.getItem('tryoutSkd.v1.rusak'))) === '{rusak!!', errors);
     await ctx.close();
   }
 
   // ---------------------------------------------------------------- K17 PWA offline
   console.log('K17 PWA: manifest, service worker, offline');
   {
-    const { ctx, page } = await open('2026-11-23T11:30:00Z');
+    const { ctx, page } = await open('2026-11-24T11:30:00Z');
     const man = await page.evaluate(async () => { const r = await fetch(document.querySelector('link[rel=manifest]').href); return r.json(); });
     check('manifest valid: standalone, ikon 192/512/maskable, start_url relatif', man.display === 'standalone' && man.start_url === './' && man.icons.some(i => i.sizes === '192x192') && man.icons.some(i => i.sizes === '512x512') && man.icons.some(i => i.purpose === 'maskable') && man.lang === 'id', man);
     for (const i of man.icons) { const st = await page.evaluate(async u => (await fetch(u)).status, new URL(i.src, base + 'manifest.webmanifest').href); check('ikon ' + i.src + ' dapat dimuat', st === 200); }
@@ -473,15 +469,15 @@ function seedState() {
     check('service worker aktif dengan scope akar situs', swState.active && swState.scope === base, swState);
     await page.reload(); await page.waitForSelector('#view h1');
     check('halaman dikendalikan service worker setelah muat ulang', await page.evaluate(() => !!navigator.serviceWorker.controller));
-    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v3')).keys()).map(r => new URL(r.url).pathname));
+    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v4')).keys()).map(r => new URL(r.url).pathname));
     check('cangkang aplikasi ter-cache', ['/index.html', '/app.js', '/schedule.js', '/styles.css', '/manifest.webmanifest', '/icons/icon-192.png'].every(p => cached.includes(p)), cached);
     await page.check('[data-done=T001]');
     await ctx.setOffline(true);
     await page.reload(); await page.waitForSelector('#view h1', { timeout: 8000 });
-    check('OFFLINE: halaman tetap termuat setelah reload', (await page.locator('.timeline .ev').count()) === 4);
+    check('OFFLINE: halaman tetap termuat setelah reload', (await page.locator('.timeline .ev').count()) === 6);
     check('OFFLINE: data lokal tetap ada (1/120)', /1\/120/.test(await page.textContent('.card')));
     await go(page, '#/kalender');
-    check('OFFLINE: kalender 10 minggu tampil', (await page.locator('details.week[data-w]').count()) === 10);
+    check('OFFLINE: kalender 16 minggu tampil', (await page.locator('details.week[data-w]').count()) === 16);
     await go(page, '#/catatan'); await page.click('[data-act=note-new]'); await page.fill('#n-topic', 'Offline'); await page.fill('#n-note', 'Catatan saat offline'); await page.click('[data-act=note-save]');
     check('OFFLINE: menambah catatan berfungsi', (await stateOf(page)).wrong.length === 1);
     const navOffline = await page.evaluate(async () => { const r = await fetch('./index.html'); return r.status; });
@@ -498,7 +494,7 @@ function seedState() {
   {
     const sub = await startServer('/tryout-skd-repo/');
     const b2 = 'http://127.0.0.1:' + sub.port + '/tryout-skd-repo/';
-    const { ctx, page, errors } = await open('2026-11-23T11:30:00Z', { base: b2 });
+    const { ctx, page, errors } = await open('2026-11-24T11:30:00Z', { base: b2 });
     const bad = [];
     page.on('response', r => { if (r.status() >= 400) bad.push(r.url()); });
     await page.reload(); await page.waitForSelector('#view h1');
@@ -506,7 +502,7 @@ function seedState() {
     check('service worker ter-scope di subpath', sw === b2, sw);
     check('tidak ada permintaan 404 di subpath', bad.length === 0 && !sub.seen.some(s => !s.url.startsWith('/tryout-skd-repo/')), [bad, sub.seen.filter(s => !s.url.startsWith('/tryout-skd-repo/'))]);
     await ctx.setOffline(true); await page.reload(); await page.waitForSelector('#view h1', { timeout: 8000 });
-    check('offline di subpath berfungsi', (await page.locator('.timeline .ev').count()) === 4);
+    check('offline di subpath berfungsi', (await page.locator('.timeline .ev').count()) === 6);
     await ctx.setOffline(false);
     check('tanpa galat konsol di subpath', errors.length === 0, errors);
     await ctx.close(); sub.srv.close();

@@ -125,7 +125,7 @@
     ui.shown = statusKey(r, n);
     var h = '<h2 class="sec">' + esc(S.fmtLong(n.date)) + (day.holiday ? ' <span class="tag">' + esc(day.holiday) + '</span>' : '') + '</h2>';
     h += '<section class="card"><div class="two"><div><div class="big">' + (dts > 0 ? 'H-' + dts : dts === 0 ? 'Hari SKD' : 'SKD lewat') + '</div><div class="sub">SKD ' + esc(S.fmtLong(state.settings.skdDate)) + '</div></div><div><div class="big">' + ts.done + '/' + ts.total + '</div><div class="sub">tryout selesai</div></div></div>' + bar(ts.done, ts.total, 'Progres total tryout');
-    if (wk) h += '<div class="rowline"><span>Minggu ' + wk + '</span><span>' + ws[wk - 1].done + '/' + S.PER_WEEK + '</span></div>' + bar(ws[wk - 1].done, S.PER_WEEK, 'Progres minggu ' + wk);
+    if (wk) h += '<div class="rowline"><span>Minggu ' + wk + '</span><span>' + ws[wk - 1].done + '/' + ws[wk - 1].total + '</span></div>' + bar(ws[wk - 1].done, ws[wk - 1].total, 'Progres minggu ' + wk);
     h += '</section>';
     var warn = warnings({ basic: true, pointer: true });
     if (day.phase !== 'program') h += warn;
@@ -138,7 +138,7 @@
       if (flex.length) h += '<h2 class="sec">Tanpa jam</h2><ol class="timeline">' + flex.map(function (e) { return eventHtml(e, tmap, n, n.date); }).join('') + '</ol><p class="hint">Hari ini terlalu padat untuk jam otomatis. Buka tryoutnya lalu atur jam mulai.</p>';
       if (!day.tryouts.length) h += '<p class="hint">Tidak ada tryout hari ini.</p>';
     } else {
-      var msg = { sebelum: 'Program belum dimulai. Tryout pertama: ' + S.fmtLong(S.START_DATE) + ', pukul 19.00 WITA.', tenang: 'Minggu tenang: tidak ada tryout. Cukup baca ulang buku soal salah dan jaga tidur.', skd: 'Hari ini hari SKD. Tidak ada tryout.', setelah: 'SKD sudah lewat. Jadwal tryout selesai.' }[day.phase];
+      var msg = { sebelum: 'Program belum dimulai. Tryout pertama: ' + S.fmtLong(S.FIRST_DATE) + ', pukul 13.15 WITA.', tenang: 'Minggu tenang: tidak ada tryout. Cukup baca ulang buku soal salah dan jaga tidur.', skd: 'Hari ini hari SKD. Tidak ada tryout.', setelah: 'SKD sudah lewat. Jadwal tryout selesai.' }[day.phase];
       h += '<section class="card"><p>' + msg + '</p>' + (day.phase === 'tenang' ? '<button class="btn" data-act="goto-notes">Buka buku soal salah</button>' : '') + '</section>';
       if (r.next) h += '<section class="card now-card"><div class="rowline"><span>Berikutnya: ' + esc(r.next.label) + ' · ' + esc(shortDay(r.nextDate)) + ' ' + S.fmtTime(r.next.start) + '</span><span class="cd" id="cd" data-abs="' + (S.dayNum(r.nextDate) * 86400 + r.next.start * 60) + '">' + countdownText(r.nextIn) + '</span></div></section>';
     }
@@ -146,11 +146,11 @@
   }
 
   /* ---------- Kalender ---------- */
-  var WEEK_NOTES = { 1: 'Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des: tryout hari itu boleh digeser ke hari lain di minggu yang sama.', 6: 'Tahun Baru jatuh Jumat 1 Jan: geser ke hari lain di minggu yang sama.', 10: 'Tryout terakhir.' };
-  var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Soal yang salah dicatat per topik, lalu dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Dari 1 Februari sampai hari SKD tidak ada tryout: cukup baca ulang buku soal salah dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
+  var WEEK_NOTES = { 1: 'Mulai Selasa 24 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des, hari tanpa tryout.', 6: 'Tahun Baru jatuh Jumat 1 Jan, hari tanpa tryout.', 16: 'Tryout terakhir: Senin 8 Maret 2027.' };
+  var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Soal yang salah dicatat per topik, lalu dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang buku soal salah dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
   function rowHtml(t, d0, thr) {
     var tot = S.totalScore(t), st = S.statusOf(t, d0);
-    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : '') + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
+    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : ' · ' + ['siang', 'malam'][t.slot]) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
   }
   function weeksBlock() {
     var d0 = today(), cw = S.weekOf(d0), list = S.tryoutList(state), ws = S.weekStats(state), thr = state.settings.thr;
@@ -158,19 +158,19 @@
     for (var w = 1; w <= S.WEEKS; w++) {
       var start = S.weekStart(w), end = S.addDays(start, 6), open = ui.calOpen[w] !== undefined ? ui.calOpen[w] : w === cw;
       var wl = list.filter(function (t) { return t.week === w; });
-      h += '<details class="week' + (w === cw ? ' current' : '') + '" data-w="' + w + '"' + (open ? ' open' : '') + '><summary><span class="wt">Minggu ' + w + '<small> ' + S.fmtShort(start) + ' – ' + S.fmtShort(end) + '</small></span><span class="wc">' + ws[w - 1].done + '/' + S.PER_WEEK + '</span></summary>';
-      h += bar(ws[w - 1].done, S.PER_WEEK, 'Progres minggu ' + w);
+      h += '<details class="week' + (w === cw ? ' current' : '') + '" data-w="' + w + '"' + (open ? ' open' : '') + '><summary><span class="wt">Minggu ' + w + '<small> ' + S.fmtShort(start) + ' – ' + S.fmtShort(end) + '</small></span><span class="wc">' + ws[w - 1].done + '/' + ws[w - 1].total + '</span></summary>';
+      h += bar(ws[w - 1].done, ws[w - 1].total, 'Progres minggu ' + w);
       h += '<div class="dots" aria-hidden="true">' + wl.map(function (t) { return '<i class="dot s-' + S.statusOf(t, d0) + '"></i>'; }).join('') + '</div>';
       if (WEEK_NOTES[w]) h += '<p class="note">' + esc(WEEK_NOTES[w]) + '</p>';
       h += '<ul class="list">' + wl.map(function (t) { return rowHtml(t, d0, thr); }).join('') + '</ul></details>';
     }
-    h += '<p class="hint">Minggu tenang: 1 Februari sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + '), tanpa tryout. Baca ulang buku soal salah dan jaga tidur.</p>';
+    h += '<p class="hint">Jadwal: Senin–Kamis, 2 tryout per hari (siang 13.15 dan malam 19.00), tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
     return h;
   }
   function pageHead(title, sub, noGear) {
     return '<header class="page-h"><div><h1>' + esc(title) + '</h1><p>' + esc(sub) + '</p></div>' + (noGear ? '<a class="gear" href="#/tryout">Kembali</a>' : '<a class="gear" href="#/pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></a>') + '</header>';
   }
-  function viewTryout() { return pageHead('Tryout', '120 tryout · WITA') + todayBlock() + weeksBlock(); }
+  function viewTryout() { return pageHead('Tryout', '120 tryout · Sen–Kam') + todayBlock() + weeksBlock(); }
 
 
   /* ---------- Skor ---------- */

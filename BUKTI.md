@@ -1,13 +1,15 @@
 # Bukti pengujian
 
-Hasil mentah: `tests/hasil-uji.txt` (32 tes logika + 128 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
+**Revisi jadwal 2026-11-23:** mulai Selasa 24 Nov 2026, 2 tryout/hari (siang 13.15, malam 19.00), Senin–Kamis, 120 tryout, selesai Senin 8 Maret 2027. Baris K1–K3 dan K8 di bawah sudah dijalankan ulang untuk jadwal ini (lihat `tests/hasil-uji.txt`).
+
+Hasil mentah: `tests/hasil-uji.txt` (38 tes logika + 128 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
 Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), zona waktu peramban sengaja `America/Los_Angeles`, jam palsu untuk skenario waktu.
 
 | # | Kriteria | Bukti |
 |---|---|---|
-| K1 | 120 tryout, 12 per minggu, periode 23 Nov 2026 – 31 Jan 2027 | `logic.test.js`: total 120 dan ID unik; 10 minggu × 12; tiap minggu mulai sama dengan tabel kalender PDF |
-| K2 | Templat harian | `logic.test.js`: jam persis Senin–Kamis, Jumat, Sabtu, Minggu (termasuk baca ulang 19.30–20.00) |
-| K3 | Geser Natal dan Tahun Baru | `logic.test.js`: 25 Des dan 1 Jan Jumat dengan 2 TO; geser ke minggu lain ditolak; 2000 geseran acak tidak pernah mengubah 120 atau 12/minggu. `e2e`: geser lewat UI, hanya 7 opsi hari, total tetap 120, kembalikan ke jadwal awal |
+| K1 | 120 tryout, mulai Selasa 24 Nov 2026, selesai Senin 8 Mar 2027, hanya Sen–Kam, 2 per hari | `logic.test.js`: total 120 dan ID unik; tanggal pertama/terakhir; 60 hari × 2; 16 minggu = 6 + 14×8 + 2; awal tiap minggu; tak ada tryout di Jumat 25 Des dan 1 Jan; 86 tryout sebelum 8 Feb dan 34 sesudahnya |
+| K2 | Templat harian | `logic.test.js`: Sen–Kam siang 13.15–14.55 + bahas 15.00–15.45, malam 19.00–20.40 + bahas 20.50–21.50, santai, tidur 23.00; Jumat/Sabtu hanya tidur; Minggu baca ulang 19.30–20.00; Senin 23 Nov (belum mulai) hanya tidur |
+| K3 | Geser tryout | `logic.test.js`: ke hari lain di minggu yang sama (termasuk Jumat Natal dan akhir pekan) berhasil, ke minggu lain ditolak; 2000 geseran acak tidak mengubah 120 atau jumlah per minggu; slot tambahan tanpa tabrakan; jam kustom dan bentrok. `e2e`: geser Kamis 24 Des ke Jumat 25 Des lewat UI (hanya 7 opsi hari), peringatan libur, geser lagi, kembalikan, Tahun Baru |
 | K4 | Hari Ini | `e2e`: 19.30 WITA (peramban di Los Angeles) → "Tryout 19.00–20.40" disorot, hitung mundur 01:20:00 berkurang tiap detik, setelah 81 menit sorotan pindah ke Pembahasan. Screenshot 01 |
 | K5 | Checklist dan skor | `e2e`: centang selesai, nama paket, skor 70/80/170 → total 320; batas skor ditolak |
 | K6 | Ambang | `e2e`: TIU 79 ✗ lalu 80 ✓; ambang bisa diubah di Pengaturan dan nilai tak valid ditolak |

@@ -1,5 +1,7 @@
 # Kriteria penerimaan — Jadwal Tryout SKD
 
+> **Revisi 2026-11-23 (permintaan Shandy):** mulai Selasa 24 Nov 2026, 2 tryout per hari (siang dan malam), hanya Senin–Kamis, 120 tryout tetap tercakup. K1–K3 di bawah berlaku untuk jadwal revisi: 120 tryout = 60 hari, 16 minggu (6, 14×8, 2), tryout terakhir Senin 8 Maret 2027; Jumat 25 Des dan 1 Jan tidak berisi tryout (tryout minggu itu masih bisa digeser ke hari lain di minggu yang sama, termasuk Jumat/akhir pekan). Tabel asli di bawah menggambarkan versi pertama (12/minggu, 10 minggu).
+
 Ditulis sebelum coding. Setiap butir dibuktikan dengan tes nyata (lihat `BUKTI.md`).
 
 Hasil cocok-silang dengan PDF "Jadwal Tryout Disiplin": templat harian, 12 TO/minggu, 10 minggu,
