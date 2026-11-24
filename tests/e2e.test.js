@@ -402,6 +402,36 @@ function seedState() {
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- Geser: jam/sesi baru tampil di daftar, detail, timeline
+  console.log('Geser tryout: tanggal dan jam/sesi baru tampil di daftar, detail, dan timeline');
+  {
+    const { ctx, page } = await open('2026-11-24T02:00:00Z'); // Selasa 24 Nov 10.00 WITA
+    await go(page, '#/tryout');
+    const row = () => page.textContent('li.item:has([data-open=T001]) .l1');
+    check('sebelum geser: baris #1 menampilkan "siang 13.15"', /siang 13\.15/.test(await row()) && !/↔/.test(await row()), await row());
+    await page.click('[data-open=T001]');
+    check('detail menampilkan jam tryout', /Jam:.*siang 13\.15/.test(await page.textContent('#sheet')), await page.textContent('#sheet .sub'));
+    check('ada pilihan sesi: otomatis, siang, siang 2, malam', (await page.$$eval('#f-sesi option', o => o.map(x => x.textContent))).join('|') === 'Otomatis (slot kosong di hari itu)|siang 13.15|siang 2 16.00|malam 19.00');
+    await page.selectOption('#f-sesi', '960'); await page.click('[data-act=move]');
+    check('detail setelah geser: jam siang 2 16.00 dan "digeser dari"', /Jam:.*siang 2 16\.00/.test(await page.textContent('#sheet')) && /digeser dari/.test(await page.textContent('#sheet')), await page.textContent('#sheet .sub'));
+    check('pesan geser menyebut jam baru', /siang 2 16\.00/.test(await page.textContent('#move-msg')));
+    await closeSheet(page);
+    await go(page, '#/tryout');
+    check('baris #1 kini menampilkan tanggal DAN jam baru: "↔ · siang 2 16.00"', /↔/.test(await row()) && /siang 2 16\.00/.test(await row()) && !/siang 13\.15/.test(await row()), await row());
+    const tl = (await page.$$eval('.timeline .ev', e => e.map(x => x.textContent))).join(' | ');
+    check('timeline Hari Ini: Tryout siang 2 pukul 16.00–17.40 dan malam tetap 19.00', /Tryout siang 2/.test(tl) && /16\.00–17\.40/.test(tl) && /19\.00–20\.40/.test(tl) && !/13\.15–14\.55/.test(tl), tl);
+    await page.click('[data-open=T001]'); await page.fill('#f-time', '14:30'); await page.click('[data-act=move]'); await closeSheet(page);
+    await go(page, '#/tryout');
+    check('jam kustom 14:30 tampil di baris sebagai "14.30"', /· 14\.30/.test(await row()), await row());
+    await page.click('[data-open=T001]'); await page.click('[data-act=unmove]'); await closeSheet(page);
+    await go(page, '#/tryout');
+    check('kembalikan: baris kembali "siang 13.15" tanpa ↔', /siang 13\.15/.test(await row()) && !/↔/.test(await row()), await row());
+    await page.click('[data-open=T001]'); await page.selectOption('#f-date', '2026-11-28'); await page.selectOption('#f-sesi', '1140'); await page.click('[data-act=move]'); await closeSheet(page);
+    await go(page, '#/tryout');
+    check('geser ke Sabtu 28 Nov malam: baris menampilkan "Sab 28 Nov ↔ · malam 19.00"', /Sab 28 Nov/.test(await row()) && /malam 19\.00/.test(await row()), await row());
+    await ctx.close();
+  }
+
   // ---------------------------------------------------------------- Tidak ada teks "undefined" / "null" / "NaN"
   console.log('Tidak ada undefined/null/NaN di tampilan');
   {

@@ -23,6 +23,11 @@ K3 geser tryout
   ok   Jumat (1 tryout) diisi 2 tryout geseran: slot siang 13.15 dan siang 2 16.00, tanpa tabrakan
   ok   jam mulai kustom, dan bentrok ditandai
   ok   delapan tryout dipindah ke satu Sabtu (sudah 3): 3 slot berjam, 8 jam fleksibel
+Jadwal efektif setelah digeser (jam/sesi ikut berubah)
+  ok   scheduleMap: jadwal awal punya sesi dan jam; tidak ada undefined
+  ok   geser hanya jam di hari yang sama (pilih sesi): jam/sesi berubah dan tampil di timeline
+  ok   geser ke hari lain: sesi mengikuti slot kosong hari tujuan; jam kustom tampil sebagai jam; tanpa jam = jam belum diatur
+  ok   kembalikan ke jadwal awal: jam dan sesi kembali
 K6/K7 skor, ambang, progres
   ok   total otomatis dan lulus per subtes (default 65/80/166)
   ok   ambang bisa diubah
@@ -50,7 +55,7 @@ K4 waktu WITA dan hitung mundur
   ok   kegiatan berjalan dan berikutnya (Selasa 24 Nov 19.30 WITA)
   ok   siang: jeda, lewat tengah malam, sebelum program, dan setelah program
 
-42 tes lulus
+46 tes lulus
 K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
   ok    tanggal ditampilkan dalam WITA
   ok    kegiatan berjalan disorot: Tryout malam 19.00–20.40
@@ -155,6 +160,17 @@ Warna polos di semua halaman dan dialog (gelap dan terang)
   ok    light: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
   ok    light: dialog detail tryout polos, termasuk ::backdrop
   ok    light: dialog konfirmasi polos, termasuk ::backdrop
+Geser tryout: tanggal dan jam/sesi baru tampil di daftar, detail, dan timeline
+  ok    sebelum geser: baris #1 menampilkan "siang 13.15"
+  ok    detail menampilkan jam tryout
+  ok    ada pilihan sesi: otomatis, siang, siang 2, malam
+  ok    detail setelah geser: jam siang 2 16.00 dan "digeser dari"
+  ok    pesan geser menyebut jam baru
+  ok    baris #1 kini menampilkan tanggal DAN jam baru: "↔ · siang 2 16.00"
+  ok    timeline Hari Ini: Tryout siang 2 pukul 16.00–17.40 dan malam tetap 19.00
+  ok    jam kustom 14:30 tampil di baris sebagai "14.30"
+  ok    kembalikan: baris kembali "siang 13.15" tanpa ↔
+  ok    geser ke Sabtu 28 Nov malam: baris menampilkan "Sab 28 Nov ↔ · malam 19.00"
 Tidak ada undefined/null/NaN di tampilan
   ok    tanpa undefined/null/NaN di #/tryout
   ok    tanpa undefined/null/NaN di #/rekap
@@ -209,4 +225,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-142 pemeriksaan lulus, 0 gagal
+152 pemeriksaan lulus, 0 gagal

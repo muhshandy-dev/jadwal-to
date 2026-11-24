@@ -76,7 +76,7 @@ Service worker memakai strategi *jaringan-dulu*: bila online, aplikasi selalu me
 ## Aturan perilaku yang perlu diketahui
 
 - **Geser** hanya ke hari lain di minggu yang sama, supaya jumlah tryout tiap minggu tetap dan total tetap 150. Tryout dianggap *terlewat* bila belum selesai dan tanggalnya sudah lewat (WITA); peringatannya hilang bila digeser ke hari ini atau sesudahnya, atau ditandai selesai.
-- Tryout yang digeser ke hari lain mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis: siang 2 16.00; Jumat: siang 13.15 dan siang 2 16.00; di luar itu dipakai "Jam mulai" yang Anda isi sendiri). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
+- Saat menggeser, pilih hari dan **sesi** (otomatis, siang 13.15, siang 2 16.00, malam 19.00) atau isi jam lain. Baris daftar, detail, dan timeline Hari Ini selalu menampilkan hari dan jam/sesi yang berlaku (mis. "Sel 24 Nov ↔ · siang 2 16.00"). Tryout yang tidak digeser tetap di sesinya sendiri. Tanpa pilihan sesi, tryout yang digeser mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis: siang 2 16.00; Jumat: siang 13.15 dan siang 2 16.00; di luar itu dipakai "Jam mulai" yang Anda isi sendiri). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
 - **Total** dihitung bila ketiga skor terisi. Skor valid: TWK 0–150, TIU 0–175, TKP 0–225 (bilangan bulat). Mengisi skor otomatis menandai tryout selesai.
 - **Skor mentok**: rata-rata mingguan TWK atau TKP, tiga minggu berurutan, minimal 3 tryout bernilai per minggu, tidak naik dua kali berturut-turut (sama atau turun).
 - **Paket dobel**: nama dianggap sama bila huruf besar/kecil, spasi, dan tanda baca diabaikan.
@@ -86,8 +86,8 @@ Service worker memakai strategi *jaringan-dulu*: bila online, aplikasi selalu me
 ## Pengujian
 
 ```bash
-node tests/logic.test.js                          # 42 tes logika, tanpa dependensi
-npm i -D playwright && node tests/e2e.test.js     # 142 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
+node tests/logic.test.js                          # 46 tes logika, tanpa dependensi
+npm i -D playwright && node tests/e2e.test.js     # 152 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
 Catatan: versi pertama aplikasi mengikuti PDF "Jadwal Tryout Disiplin" (12 tryout per minggu, Senin–Minggu). Sejak revisi 24 November 2026 jadwal memakai pola di atas (15 tryout per minggu, Senin–Minggu); 7 aturan tetap dari PDF tetap berlaku, kecuali aturan ke-6 yang menyesuaikan.

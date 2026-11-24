@@ -2,7 +2,7 @@
 
 **Revisi jadwal 2026-11-24:** mulai Selasa 24 Nov 2026, 15 tryout/minggu (Sen–Kam 2/hari, Jumat 1 malam, Sabtu 3, Minggu 3; sesi siang 13.15, siang 2 16.00, malam 19.00), 150 tryout, selesai Senin 1 Feb 2027 (sebelum SKD bawaan 8 Feb). Baris K1–K3 dan K8 di bawah sudah dijalankan ulang untuk jadwal ini (lihat `tests/hasil-uji.txt`).
 
-Hasil mentah: `tests/hasil-uji.txt` (42 tes logika + 142 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
+Hasil mentah: `tests/hasil-uji.txt` (46 tes logika + 152 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
 Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), zona waktu peramban sengaja `America/Los_Angeles`, jam palsu untuk skenario waktu.
 
 | # | Kriteria | Bukti |
@@ -14,6 +14,7 @@ Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), 
 | K5 | Checklist dan skor | `e2e`: centang selesai, nama paket, skor 70/80/170 → total 320; batas skor ditolak |
 | K6 | Ambang | `e2e`: TIU 79 ✗ lalu 80 ✓; ambang bisa diubah di Pengaturan dan nilai tak valid ditolak |
 | K7 | Progres dan SKD | `e2e`: 0/150 dan H-77; ubah SKD → H-84; `logic`: x/15 per minggu |
+| Geser | Jam/sesi baru tampil setelah digeser (perbaikan 2026-11-24: baris daftar hanya menampilkan tanggal) | `logic`: `scheduleMap` (sesi/jam efektif), geser hanya jam, geser ke hari lain, jam kustom, kembalikan; tryout lain tidak ikut pindah sesi. `e2e`: baris daftar "↔ · siang 2 16.00", detail "Jam: …", pesan geser, timeline Hari Ini, pilihan sesi, jam kustom 14.30, kembalikan, geser ke Sabtu malam |
 | K8 | Terlewat | `logic` dan `e2e`: peringatan muncul untuk tryout lewat tanggal; hilang bila digeser ke depan |
 | K9 | Paket dobel | `logic` (huruf/spasi/tanda baca diabaikan) dan `e2e` (peringatan di sheet dan halaman Skor) |
 | K10 | Tren dan skor mentok | `e2e`: data contoh 3 minggu → grafik SVG dengan garis ambang, tabel rata-rata, peringatan mentok TWK dan tidak untuk TKP yang naik. Screenshot 04, 05. `logic`: aturan mentok termasuk kasus batas |

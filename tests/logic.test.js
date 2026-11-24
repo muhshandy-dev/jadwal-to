@@ -170,6 +170,47 @@ t('delapan tryout dipindah ke satu Sabtu (sudah 3): 3 slot berjam, 8 jam fleksib
   assert.strictEqual(ev.length, 11); assert.strictEqual(ev.filter(e => e.flex).length, 8);
 });
 
+console.log('Jadwal efektif setelah digeser (jam/sesi ikut berubah)');
+t('scheduleMap: jadwal awal punya sesi dan jam; tidak ada undefined', () => {
+  const m = S.scheduleMap(S.newState());
+  assert.strictEqual(Object.keys(m).length, 150);
+  assert.strictEqual(m.T001.text, 'siang 13.15'); assert.strictEqual(m.T002.text, 'malam 19.00');
+  assert.strictEqual(m.T009.text, 'siang 2 16.00'); // Sabtu 28 Nov
+  Object.values(m).forEach(x => assert.ok(x.text && !/undefined|null|NaN/.test(x.text)));
+});
+t('geser hanya jam di hari yang sama (pilih sesi): jam/sesi berubah dan tampil di timeline', () => {
+  const st = S.newState();
+  assert.ok(S.moveTryout(st, 'T001', '2026-11-24', 16 * 60).ok);
+  const m = S.scheduleMap(st);
+  assert.strictEqual(m.T001.text, 'siang 2 16.00'); assert.strictEqual(m.T001.session, 'siang 2');
+  assert.ok(S.getTryout(st, 'T001').moved);
+  const ev = S.buildDay(st, '2026-11-24').events.filter(e => e.kind === 'tryout').map(e => e.label + '@' + S.fmtTime(e.start));
+  assert.deepStrictEqual(ev, ['Tryout siang 2@16.00', 'Tryout malam@19.00']);
+  assert.ok(!S.buildDay(st, '2026-11-24').events.some(e => e.conflict));
+});
+t('geser ke hari lain: sesi mengikuti slot kosong hari tujuan; jam kustom tampil sebagai jam; tanpa jam = jam belum diatur', () => {
+  const st = S.newState();
+  S.moveTryout(st, 'T001', '2026-11-27'); // Jumat: malam sudah dipakai T007
+  assert.strictEqual(S.scheduleMap(st).T001.text, 'siang 13.15');
+  S.moveTryout(st, 'T001', '2026-11-27', 14 * 60);
+  assert.strictEqual(S.scheduleMap(st).T001.text, '14.00'); assert.strictEqual(S.scheduleMap(st).T001.session, null);
+  S.moveTryout(st, 'T001', '2026-11-27', 19 * 60); // sesi malam diambil T001 -> T007 (jadwal awal malam) otomatis pindah ke slot kosong, tanpa bentrok
+  assert.strictEqual(S.scheduleMap(st).T001.text, 'malam 19.00'); assert.strictEqual(S.scheduleMap(st).T007.text, 'siang 13.15');
+  assert.ok(!S.buildDay(st, '2026-11-27').events.some(e => e.conflict));
+  S.moveTryout(st, 'T001', '2026-11-27', 19 * 60 + 30); // jam kustom di luar sesi baku yang menimpa T007 malam: bentrok ditandai
+  assert.strictEqual(S.scheduleMap(st).T001.text, '19.30'); assert.ok(S.buildDay(st, '2026-11-27').events.some(e => e.conflict));
+  const st2 = S.newState();
+  ['T001', 'T002', 'T003', 'T004'].forEach(id => S.moveTryout(st2, id, '2026-11-28')); // Sabtu: 3 + 4 geseran, slot habis
+  const m = S.scheduleMap(st2);
+  assert.ok(Object.values(m).some(x => x.flex && x.text === 'jam belum diatur'));
+});
+t('kembalikan ke jadwal awal: jam dan sesi kembali', () => {
+  const st = S.newState();
+  S.moveTryout(st, 'T001', '2026-11-26', 19 * 60);
+  S.resetMove(st, 'T001');
+  assert.strictEqual(S.scheduleMap(st).T001.text, 'siang 13.15'); assert.strictEqual(S.getTryout(st, 'T001').moved, false);
+});
+
 console.log('K6/K7 skor, ambang, progres');
 t('total otomatis dan lulus per subtes (default 65/80/166)', () => {
   const st = S.newState(); const id = 'T001';

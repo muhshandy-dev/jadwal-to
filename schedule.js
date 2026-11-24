@@ -70,6 +70,8 @@
   var SIANG = slot('siang', T(13, 15), T(14, 55), T(15), T(15, 45));
   var SIANG2 = slot('siang 2', T(16), T(17, 40), T(17, 45), T(18, 30));
   var MALAM = slot('malam', T(19), T(20, 40), T(20, 50), T(21, 50));
+  var SESSIONS = [SIANG, SIANG2, MALAM]; // sesi baku yang bisa dipilih saat menggeser
+  function slotAt(start) { for (var i = 0; i < SESSIONS.length; i++) if (SESSIONS[i].to[0] === start) return SESSIONS[i]; return null; }
   var TEMPLATES = {
     weekday: { // Senin-Kamis: 2 tryout (siang dan malam)
       slots: [SIANG, MALAM],
@@ -169,6 +171,19 @@
         twk: num(u.twk), tiu: num(u.tiu), tkp: num(u.tkp)
       };
     });
+  }
+  // Jadwal efektif tiap tryout (setelah digeser): { id: { date, start, end, session, flex, text } }; text mis. "siang 2 16.00" atau "14.00".
+  function scheduleMap(state) {
+    var list = tryoutList(state), dates = {}, out = {};
+    list.forEach(function (t) { dates[t.date] = 1; });
+    Object.keys(dates).forEach(function (d) {
+      buildDay(state, d, list).events.forEach(function (e) {
+        if (e.kind !== 'tryout' || !e.toId) return;
+        var text = e.start === null ? 'jam belum diatur' : (e.session ? e.session + ' ' : '') + fmtTime(e.start);
+        out[e.toId] = { date: d, start: e.start, end: e.end, session: e.session || null, flex: e.start === null, text: text };
+      });
+    });
+    return out;
   }
   function getTryout(state, id) { return tryoutList(state).filter(function (t) { return t.id === id; })[0] || null; }
   function totalScore(t) { return t.twk !== null && t.tiu !== null && t.tkp !== null ? t.twk + t.tiu + t.tkp : null; }
@@ -318,14 +333,22 @@
       seq++;
       var lab = slot && slot.name ? ' ' + slot.name : (multi ? ' ' + seq : '');
       if (!slot) { evs.push({ kind: 'tryout', label: 'Tryout' + lab, start: null, end: null, toId: t.id, flex: true }); return; }
-      evs.push({ kind: 'tryout', label: 'Tryout' + lab, start: slot.to[0], end: slot.to[1], toId: t.id });
+      evs.push({ kind: 'tryout', label: 'Tryout' + lab, start: slot.to[0], end: slot.to[1], toId: t.id, session: slot.name || null });
       evs.push({ kind: 'bahas', label: 'Pembahasan', start: slot.bahas[0], end: slot.bahas[1], toId: t.id });
       busy.push([slot.to[0], slot.to[1]], [slot.bahas[0], slot.bahas[1]]);
     }
-    auto.forEach(function (t, i) {
-      add(t, i < tpl.slots.length ? tpl.slots[i] : (tpl.extras[i - tpl.slots.length] || null));
+    // Slot: tryout berjam kustom memakai jamnya (sesi baku bila cocok); sisanya mengisi slot yang belum terpakai,
+    // tryout jadwal awal lebih dulu menempati slotnya sendiri supaya tidak ikut berpindah saat tryout lain digeser.
+    var all = tpl.slots.concat(tpl.extras), used = {};
+    custom.forEach(function (t) { used[t.start] = 1; });
+    auto.forEach(function (t) {
+      var pick = null;
+      if (!t.moved && all[t.slot] && !used[all[t.slot].to[0]]) pick = all[t.slot];
+      else for (var i = 0; i < all.length; i++) if (!used[all[i].to[0]]) { pick = all[i]; break; }
+      if (pick) used[pick.to[0]] = 1;
+      add(t, pick);
     });
-    custom.forEach(function (t) { add(t, block(t.start)); });
+    custom.forEach(function (t) { add(t, slotAt(t.start) || block(t.start)); });
     tpl.fixed.forEach(function (f) {
       if (f.kind === 'santai' && !mine.length) return;
       if (f.kind === 'santai' || f.kind === 'istirahat') {
@@ -392,7 +415,7 @@
     dayNum: dayNum, dateStr: dateStr, isDate: isDate, dayIdx: dayIdx, addDays: addDays, diffDays: diffDays,
     fmtLong: fmtLong, fmtShort: fmtShort, fmtTime: fmtTime, weekStart: weekStart, weekOf: weekOf,
     newState: newState, normalizeState: normalizeState, tryoutList: tryoutList, getTryout: getTryout,
-    totalScore: totalScore, passInfo: passInfo, statusOf: statusOf, setField: setField, setLesson: setLesson, lessonDates: lessonDates, moveTryout: moveTryout, resetMove: resetMove,
+    totalScore: totalScore, passInfo: passInfo, statusOf: statusOf, setField: setField, scheduleMap: scheduleMap, SESSIONS: SESSIONS, setLesson: setLesson, lessonDates: lessonDates, moveTryout: moveTryout, resetMove: resetMove,
     weekStats: weekStats, totalStats: totalStats, weeklyAverages: weeklyAverages, plateau: plateau,
     normName: normName, duplicates: duplicates, missed: missed, holidayPending: holidayPending, afterSkd: afterSkd,
     buildDay: buildDay, phaseOf: phaseOf, nowWita: nowWita, statusNow: statusNow, daysToSkd: daysToSkd,
