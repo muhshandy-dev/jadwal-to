@@ -37,6 +37,9 @@ K10 tren dan skor mentok
   ok   rata-rata per minggu
   ok   mentok: rata-rata tidak naik dua minggu berturut-turut
   ok   tidak mentok bila ada kenaikan; tidak dicek bila minggu tidak berurutan atau data < 3 tryout
+K11 catatan pelajaran harian
+  ok   setLesson: simpan, ubah, kosong = hapus, tanggal tidak valid ditolak, dipangkas 1000 huruf
+  ok   lessonDates terbaru dulu; cadangan lama berisi buku soal salah tetap bisa diimpor tanpa merusak
 K15 ekspor/impor
   ok   ekspor lalu impor menghasilkan state identik
   ok   impor menolak JSON rusak, berkas asing, versi lain, dan membersihkan data berbahaya
@@ -46,7 +49,7 @@ K4 waktu WITA dan hitung mundur
   ok   kegiatan berjalan dan berikutnya (Selasa 24 Nov 19.30 WITA)
   ok   siang: jeda, lewat tengah malam, sebelum program, dan setelah program
 
-39 tes lulus
+41 tes lulus
 K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
   ok    tanggal ditampilkan dalam WITA
   ok    kegiatan berjalan disorot: Tryout malam 19.00–20.40
@@ -94,16 +97,18 @@ K10/K12/K15 tren, kalender, ekspor dan impor JSON
   ok    reset dengan konfirmasi menghapus semua data
   ok    dialog impor menyebut jumlah data
   ok    impor memulihkan data persis seperti sebelum reset
-K11/K20 buku soal salah, pengingat Minggu 19.30, XSS
-  ok    Minggu 19.30: pengingat Baca ulang buku soal salah sedang berjalan
-  ok    dua catatan tersimpan
+K11/K20 catatan pelajaran harian, pengingat Minggu 19.30, XSS
+  ok    Minggu 19.30: pengingat Baca ulang pelajaran minggu ini sedang berjalan
+  ok    tab Tryout punya kartu Pelajaran hari ini (belum ditulis)
+  ok    editor pelajaran: hanya satu kolom teks (tanpa subtes/topik)
+  ok    simpan kosong ditolak dan tidak menyimpan apa pun
+  ok    tersimpan untuk tanggal hari ini (WITA 2026-11-29) dan tampil di kartu
   ok    XSS: HTML ditampilkan sebagai teks, tidak dieksekusi
-  ok    filter subtes TKP menyisakan 1 catatan
-  ok    filter topik Pancasila menyisakan 1 catatan
-  ok    tombol sudah dibaca ulang mencatat 1×
-  ok    catatan tetap ada setelah reload
+  ok    Rekap > Pelajaran: 1 catatan di daftar
   ok    ubah catatan
+  ok    catatan tetap ada setelah reload
   ok    hapus catatan dengan konfirmasi
+  ok    tombol Tulis di Rekap menyimpan catatan hari ini
   ok    XSS lewat nama paket tidak dieksekusi
 K13 pengaturan: SKD, ambang, tema
   ok    ubah tanggal SKD ke 15 Feb: hitung mundur H-83
@@ -117,12 +122,12 @@ Navigasi sederhana: 2 tab + ikon pengaturan
   ok    tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 120 baris tryout
   ok    hanya 2 tautan di navigasi bawah
   ok    tab Rekap aktif: grafik skor
-  ok    Rekap > Soal salah: tombol tambah catatan dan filter subtes
+  ok    Rekap > Pelajaran: tombol tulis pelajaran hari ini, tanpa filter subtes
   ok    ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif
   ok    tombol Kembali ke Tryout
   ok    gerigi berada di pojok kanan atas
-  ok    pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Soal salah
-  ok    alamat lama #/catatan membuka Rekap
+  ok    pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Pelajaran
+  ok    alamat lama #/catatan membuka Rekap > Pelajaran
 Tema warna gaya GitHub (solid, tanpa transparansi)
   ok    CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter
   ok    gelap: latar #0d1117, kartu #161b22, border #30363d, teks #e6edf3
@@ -183,7 +188,7 @@ K17 PWA: manifest, service worker, offline
   ok    OFFLINE: halaman tetap termuat setelah reload
   ok    OFFLINE: data lokal tetap ada (1/120)
   ok    OFFLINE: kalender 11 minggu tampil
-  ok    OFFLINE: menambah catatan berfungsi
+  ok    OFFLINE: menulis pelajaran berfungsi
   ok    OFFLINE: berkas aplikasi dilayani dari cache
   ok    status offline di Pengaturan: siap
 K19 subpath (GitHub Pages: /nama-repo/)
@@ -192,4 +197,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-130 pemeriksaan lulus, 0 gagal
+132 pemeriksaan lulus, 0 gagal

@@ -21,7 +21,7 @@ buat akun SSCASN") dan 7 aturan tetap; keduanya ditampilkan sebagai catatan saja
 | K8 | Tryout terlewat memunculkan peringatan sampai digeser/diselesaikan | tes logika + browser |
 | K9 | Peringatan paket dobel (nama sama, tak peka huruf besar/spasi) | tes logika + browser |
 | K10 | Grafik tren TWK/TIU/TKP/total, rata-rata per minggu, peringatan "skor mentok" (TWK atau TKP tidak naik dua minggu berturut-turut) | tes logika + screenshot |
-| K11 | Buku soal salah: per subtes + topik, filter, pengingat Minggu 19.30 | tes browser |
+| K11 | (Revisi 2026-11-24) Buku soal salah dihapus; diganti satu catatan "pelajaran yang didapat hari ini" per hari + pengingat baca ulang Minggu 19.30 | tes logika + tes browser |
 | K12 | Kalender 10 minggu dengan status tiap tryout | screenshot |
 | K13 | Pengaturan: tanggal SKD, ambang, tema gelap/terang, reset dengan konfirmasi | tes browser |
 | K14 | Data bertahan setelah reload (localStorage) | tes browser |

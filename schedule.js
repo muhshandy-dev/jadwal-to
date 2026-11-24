@@ -22,11 +22,7 @@
   var UTC_OFFSET_H = 8; // WITA
   var DEFAULT_SETTINGS = { skdDate: '2027-02-08', thr: { twk: 65, tiu: 80, tkp: 166 }, theme: 'auto', notify: false, lead: 5 };
   var SUBTESTS = ['TWK', 'TIU', 'TKP'];
-  var TOPICS = {
-    TWK: ['Pancasila', 'UUD 1945', 'NKRI', 'Bhinneka Tunggal Ika', 'Nasionalisme', 'Integritas', 'Bela negara', 'Pilar negara', 'Bahasa Indonesia'],
-    TIU: ['Verbal', 'Numerik', 'Figural', 'Deret angka', 'Silogisme', 'Analogi'],
-    TKP: ['Pelayanan publik', 'Jejaring kerja', 'Sosial budaya', 'Teknologi informasi dan komunikasi', 'Profesionalisme', 'Anti-radikalisme']
-  };
+  var LESSON_MAX = 1000; // panjang maksimum catatan pelajaran harian
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function dayNum(s) { var p = s.split('-'); return Math.round(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000); }
@@ -89,9 +85,9 @@
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
       extras: [block(T(9, 30)), block(T(16))]
     },
-    sunday: { // 1 tryout siang; malam 19.30 baca ulang buku soal salah
+    sunday: { // 1 tryout siang; malam 19.30 baca ulang pelajaran minggu ini
       slots: [SIANG],
-      fixed: [{ kind: 'baca', label: 'Baca ulang buku soal salah', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+      fixed: [{ kind: 'baca', label: 'Baca ulang pelajaran minggu ini', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
       extras: [block(T(9, 30)), block(T(16))]
     }
   };
@@ -99,7 +95,7 @@
 
   /* ---------- State ---------- */
   function newState() {
-    return { version: 1, settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), tryouts: {}, wrong: [] };
+    return { version: 1, settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), tryouts: {}, lessons: {} };
   }
   function num(v) {
     if (v === null || v === undefined || v === '') return null;
@@ -144,20 +140,11 @@
       if (stt !== null) o.start = stt;
       if (Object.keys(o).length) st.tryouts[b.id] = o;
     });
-    if (Array.isArray(raw.wrong)) {
-      raw.wrong.slice(0, 5000).forEach(function (w) {
-        if (!w || typeof w !== 'object') return;
-        var sub = SUBTESTS.indexOf(w.subtest) >= 0 ? w.subtest : null;
-        var topic = str(w.topic, 80).trim();
-        var note = str(w.note, 3000).trim();
-        if (!sub || !topic || !note) return;
-        st.wrong.push({
-          id: str(w.id, 40) || ('w' + Math.random().toString(36).slice(2, 10)),
-          subtest: sub, topic: topic, note: note,
-          created: isDate(w.created) ? w.created : '',
-          reads: clampInt(w.reads, 0, 100000, 0),
-          lastRead: isDate(w.lastRead) ? w.lastRead : ''
-        });
+    // Catatan pelajaran harian: { 'YYYY-MM-DD': 'teks' }. Data lama 'wrong' (buku soal salah) sengaja diabaikan.
+    if (raw.lessons && typeof raw.lessons === 'object' && !Array.isArray(raw.lessons)) {
+      Object.keys(raw.lessons).slice(0, 2000).forEach(function (d) {
+        var txt = str(raw.lessons[d], LESSON_MAX).trim();
+        if (isDate(d) && txt) st.lessons[d] = txt;
       });
     }
     return st;
@@ -206,6 +193,13 @@
     if (!Object.keys(u).length) delete state.tryouts[id];
     return true;
   }
+  function setLesson(state, date, text) {
+    if (!isDate(date)) return { ok: false, error: 'Tanggal tidak valid.' };
+    var txt = str(text, LESSON_MAX).trim();
+    if (txt) state.lessons[date] = txt; else delete state.lessons[date];
+    return { ok: true };
+  }
+  function lessonDates(state) { return Object.keys(state.lessons).sort().reverse(); }
   function moveTryout(state, id, newDate, start) {
     var b = BY_ID[id];
     if (!b) return { ok: false, error: 'Tryout tidak dikenal.' };
@@ -386,13 +380,13 @@
 
   return {
     START_DATE: START_DATE, FIRST_DATE: FIRST_DATE, LAST_DATE: LAST_DATE, LAST_TRYOUT_DATE: LAST_TRYOUT_DATE, WEEKS: WEEKS, WEEK_COUNTS: WEEK_COUNTS, TOTAL: TOTAL, PER_DAY: PER_DAY,
-    DAY_NAMES: DAY_NAMES, MONTHS: MONTHS, HOLIDAYS: HOLIDAYS, MAX: MAX, SUBTESTS: SUBTESTS, TOPICS: TOPICS,
+    DAY_NAMES: DAY_NAMES, MONTHS: MONTHS, HOLIDAYS: HOLIDAYS, MAX: MAX, SUBTESTS: SUBTESTS, LESSON_MAX: LESSON_MAX,
     DEFAULT_SETTINGS: DEFAULT_SETTINGS, MIN_PER_WEEK_FOR_TREND: MIN_PER_WEEK_FOR_TREND,
     BASE: BASE, TEMPLATES: TEMPLATES,
     dayNum: dayNum, dateStr: dateStr, isDate: isDate, dayIdx: dayIdx, addDays: addDays, diffDays: diffDays,
     fmtLong: fmtLong, fmtShort: fmtShort, fmtTime: fmtTime, weekStart: weekStart, weekOf: weekOf,
     newState: newState, normalizeState: normalizeState, tryoutList: tryoutList, getTryout: getTryout,
-    totalScore: totalScore, passInfo: passInfo, statusOf: statusOf, setField: setField, moveTryout: moveTryout, resetMove: resetMove,
+    totalScore: totalScore, passInfo: passInfo, statusOf: statusOf, setField: setField, setLesson: setLesson, lessonDates: lessonDates, moveTryout: moveTryout, resetMove: resetMove,
     weekStats: weekStats, totalStats: totalStats, weeklyAverages: weeklyAverages, plateau: plateau,
     normName: normName, duplicates: duplicates, missed: missed, holidayPending: holidayPending, afterSkd: afterSkd,
     buildDay: buildDay, phaseOf: phaseOf, nowWita: nowWita, statusNow: statusNow, daysToSkd: daysToSkd,

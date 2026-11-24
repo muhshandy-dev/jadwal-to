@@ -1,5 +1,5 @@
 /* Service worker: pra-simpan cangkang aplikasi, lalu stale-while-revalidate. Semua path relatif. */
-var VERSION = 'tryout-skd-v5';
+var VERSION = 'tryout-skd-v6';
 var SHELL = ['./', 'index.html', 'styles.css', 'schedule.js', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

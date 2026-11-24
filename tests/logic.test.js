@@ -66,7 +66,7 @@ t('siang dulu, malam kemudian (nomor kecil = siang)', () => {
 t('Jumat: 1 tryout malam; Sabtu: siang + malam; Minggu: tryout siang, baca ulang 19.30-20.00, tidur', () => {
   assert.deepStrictEqual(dayEvents('2026-11-27'), ['tryout|19.00-20.40|Tryout malam', 'bahas|20.50-21.50|Pembahasan', 'santai|21.50-23.00|Santai / istirahat', 'tidur|23.00-00.00|Tidur']);
   assert.deepStrictEqual(dayEvents('2026-11-28'), dayEvents('2026-11-24'));
-  assert.deepStrictEqual(dayEvents('2026-11-29'), ['tryout|13.15-14.55|Tryout siang', 'bahas|15.00-15.45|Pembahasan', 'baca|19.30-20.00|Baca ulang buku soal salah', 'tidur|23.00-00.00|Tidur']);
+  assert.deepStrictEqual(dayEvents('2026-11-29'), ['tryout|13.15-14.55|Tryout siang', 'bahas|15.00-15.45|Pembahasan', 'baca|19.30-20.00|Baca ulang pelajaran minggu ini', 'tidur|23.00-00.00|Tidur']);
   assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-27').tryouts, ['T007']);
   assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-28').tryouts, ['T008', 'T009']);
   assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-29').tryouts, ['T010']);
@@ -253,13 +253,31 @@ t('tidak mentok bila ada kenaikan; tidak dicek bila minggu tidak berurutan atau 
   assert.strictEqual(S.plateau(S.weeklyAverages(st), 'twk'), null);
 });
 
+console.log('K11 catatan pelajaran harian');
+t('setLesson: simpan, ubah, kosong = hapus, tanggal tidak valid ditolak, dipangkas 1000 huruf', () => {
+  const st = S.newState();
+  assert.deepStrictEqual(st.lessons, {});
+  assert.ok(S.setLesson(st, '2026-11-24', '  Pancasila sila ke-3  ').ok); assert.strictEqual(st.lessons['2026-11-24'], 'Pancasila sila ke-3');
+  S.setLesson(st, '2026-11-24', 'Diubah'); assert.strictEqual(st.lessons['2026-11-24'], 'Diubah');
+  S.setLesson(st, '2026-11-24', '   '); assert.deepStrictEqual(st.lessons, {});
+  assert.strictEqual(S.setLesson(st, 'bukan-tanggal', 'x').ok, false); assert.deepStrictEqual(st.lessons, {});
+  S.setLesson(st, '2026-11-25', 'a'.repeat(5000)); assert.strictEqual(st.lessons['2026-11-25'].length, S.LESSON_MAX);
+});
+t('lessonDates terbaru dulu; cadangan lama berisi buku soal salah tetap bisa diimpor tanpa merusak', () => {
+  const st = S.newState(); S.setLesson(st, '2026-11-24', 'a'); S.setLesson(st, '2026-12-01', 'b'); S.setLesson(st, '2026-11-30', 'c');
+  assert.deepStrictEqual(S.lessonDates(st), ['2026-12-01', '2026-11-30', '2026-11-24']);
+  const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { tryouts: { T001: { done: true } }, wrong: [{ id: 'w1', subtest: 'TWK', topic: 'Pancasila', note: 'Sila ke-3' }] } }));
+  assert.ok(r.ok); assert.deepStrictEqual(r.state.lessons, {}); assert.strictEqual(r.state.tryouts.T001.done, true);
+  assert.deepStrictEqual(S.normalizeState({ lessons: ['x'] }).lessons, {}); // bentuk salah
+});
+
 console.log('K15 ekspor/impor');
 t('ekspor lalu impor menghasilkan state identik', () => {
   const st = S.newState();
   S.setField(st, 'T005', { done: true, name: 'Paket X', twk: 100, tiu: 120, tkp: 200, reviewed: true });
   S.moveTryout(st, 'T100', S.addDays(S.BASE[99].date, 2), 9 * 60);
   st.settings.skdDate = '2027-03-20'; st.settings.thr.twk = 60; st.settings.theme = 'dark';
-  st.wrong.push({ id: 'w1', subtest: 'TWK', topic: 'Pancasila', note: 'Sila ke-3', created: '2026-11-23', reads: 2, lastRead: '2026-11-29' });
+  S.setLesson(st, '2026-11-24', 'Sila ke-3: persatuan Indonesia'); S.setLesson(st, '2026-11-25', 'Silogisme: semua A adalah B bukan berarti semua B adalah A');
   const r = S.parseImport(JSON.stringify(S.exportData(st)));
   assert.ok(r.ok); assert.deepStrictEqual(r.state, st);
 });
@@ -268,12 +286,13 @@ t('impor menolak JSON rusak, berkas asing, versi lain, dan membersihkan data ber
   assert.strictEqual(S.parseImport('{"a":1}').ok, false);
   assert.strictEqual(S.parseImport('{"app":"tryout-skd","version":9,"data":{"tryouts":{}}}').ok, false);
   assert.strictEqual(S.parseImport('{"app":"tryout-skd","version":1,"data":{}}').ok, false);
-  const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { settings: { skdDate: 'ngawur', thr: { twk: 'x', tiu: 9999 } }, tryouts: { T001: { twk: 9999, date: '2030-01-01', done: 'ya' }, TXXX: { done: true }, T002: { date: '2026-12-01', done: true } }, wrong: [{ subtest: 'XYZ', topic: 'a', note: 'b' }, 'x'] } }));
+  const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { settings: { skdDate: 'ngawur', thr: { twk: 'x', tiu: 9999 } }, tryouts: { T001: { twk: 9999, date: '2030-01-01', done: 'ya' }, TXXX: { done: true }, T002: { date: '2026-12-01', done: true } }, wrong: [{ subtest: 'TWK', topic: 'a', note: 'b' }, 'x'], lessons: { ngawur: 'x', '2026-12-01': '  Pelajaran A  ', '2026-12-02': '   ', '2026-12-03': 123 } } }));
   assert.ok(r.ok);
   assert.strictEqual(r.state.settings.skdDate, '2027-02-08');
   assert.strictEqual(r.state.settings.thr.twk, 65); assert.strictEqual(r.state.settings.thr.tiu, 80);
   assert.deepStrictEqual(r.state.tryouts, { T002: { done: true } }); // T002 minggu 1; 2026-12-01 minggu 2, jadi tanggal ditolak
-  assert.strictEqual(r.state.wrong.length, 0);
+  assert.deepStrictEqual(r.state.lessons, { '2026-12-01': 'Pelajaran A' }); // tanggal ngawur, teks kosong, dan bukan teks dibuang
+  assert.strictEqual(r.state.wrong, undefined); // buku soal salah lama diabaikan
 });
 t('cadangan lama (jadwal sebelum revisi) tidak merusak: tanggal geser yang tak cocok minggu dibuang', () => {
   const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { tryouts: { T050: { date: '2026-12-25', done: true, twk: 70 } } } }));

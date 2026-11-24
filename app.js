@@ -8,7 +8,7 @@
   var ALIAS = { 'hari-ini': 'tryout', kalender: 'tryout', skor: 'rekap', catatan: 'rekap' };
   var memoryOnly = false;
   var state = load();
-  var ui = { recapTab: 'skor', series: 'twk', noteSub: 'Semua', noteTopic: '', calOpen: {}, sheet: null, shown: '' };
+  var ui = { recapTab: 'skor', series: 'twk', calOpen: {}, sheet: null, shown: '' };
   var installEvent = null;
   var view = document.getElementById('view');
   var sheet = document.getElementById('sheet');
@@ -110,7 +110,7 @@
       if (e.kind === 'tryout') act = '<label class="chk"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + '><span>Selesai</span></label><button class="btn small" data-open="' + t.id + '">Buka</button>';
       else act = '<label class="chk"><input type="checkbox" data-rev="' + t.id + '"' + (t.reviewed ? ' checked' : '') + '><span>Sudah dibahas</span></label>';
     }
-    if (e.kind === 'baca') act = '<button class="btn small" data-act="goto-notes">Buka catatan</button>';
+    if (e.kind === 'baca') act = '<button class="btn small" data-act="goto-lessons">Buka catatan</button>';
     return '<li class="' + cls + stt + (e.conflict ? ' conflict' : '') + '"' + (stt === ' now' ? ' aria-current="true"' : '') + '><div class="time">' + time + '</div><div class="body"><div class="lbl">' + esc(e.label) + (stt === ' now' ? ' <span class="tag">sedang berjalan</span>' : '') + (e.conflict ? ' <span class="tag bad">bentrok jam</span>' : '') + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + (act ? '<div class="act">' + act + '</div>' : '') + '</div></li>';
   }
   function countdownText(sec) {
@@ -138,16 +138,18 @@
       if (flex.length) h += '<h2 class="sec">Tanpa jam</h2><ol class="timeline">' + flex.map(function (e) { return eventHtml(e, tmap, n, n.date); }).join('') + '</ol><p class="hint">Hari ini terlalu padat untuk jam otomatis. Buka tryoutnya lalu atur jam mulai.</p>';
       if (!day.tryouts.length) h += '<p class="hint">Tidak ada tryout hari ini.</p>';
     } else {
-      var msg = { sebelum: 'Program belum dimulai. Tryout pertama: ' + S.fmtLong(S.FIRST_DATE) + ', pukul 13.15 WITA.', tenang: 'Minggu tenang: tidak ada tryout. Cukup baca ulang buku soal salah dan jaga tidur.', skd: 'Hari ini hari SKD. Tidak ada tryout.', setelah: 'SKD sudah lewat. Jadwal tryout selesai.' }[day.phase];
-      h += '<section class="card"><p>' + msg + '</p>' + (day.phase === 'tenang' ? '<button class="btn" data-act="goto-notes">Buka buku soal salah</button>' : '') + '</section>';
+      var msg = { sebelum: 'Program belum dimulai. Tryout pertama: ' + S.fmtLong(S.FIRST_DATE) + ', pukul 13.15 WITA.', tenang: 'Minggu tenang: tidak ada tryout. Cukup baca ulang catatan pelajaran dan jaga tidur.', skd: 'Hari ini hari SKD. Tidak ada tryout.', setelah: 'SKD sudah lewat. Jadwal tryout selesai.' }[day.phase];
+      h += '<section class="card"><p>' + msg + '</p>' + (day.phase === 'tenang' ? '<button class="btn" data-act="goto-lessons">Buka catatan pelajaran</button>' : '') + '</section>';
       if (r.next) h += '<section class="card now-card"><div class="rowline"><span>Berikutnya: ' + esc(r.next.label) + ' · ' + esc(shortDay(r.nextDate)) + ' ' + S.fmtTime(r.next.start) + '</span><span class="cd" id="cd" data-abs="' + (S.dayNum(r.nextDate) * 86400 + r.next.start * 60) + '">' + countdownText(r.nextIn) + '</span></div></section>';
     }
+    var ls = state.lessons[n.date];
+    h += '<section class="card"><div class="rowline"><span><b>Pelajaran hari ini</b></span><button class="btn small" data-act="lesson-today">' + (ls ? 'Ubah' : 'Tulis') + '</button></div>' + (ls ? '<p class="ntext">' + esc(ls) + '</p>' : '<p class="hint">Belum ditulis. Satu atau dua kalimat cukup.</p>') + '</section>';
     return h;
   }
 
   /* ---------- Kalender ---------- */
   var WEEK_NOTES = { 1: 'Mulai Selasa 24 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des. Tryout malamnya boleh digeser ke hari lain di minggu ini.', 6: 'Tahun Baru jatuh Jumat 1 Jan. Tryout malamnya boleh digeser ke hari lain di minggu ini.', 11: 'Tryout terakhir: Senin 1 Februari 2027. Sesudahnya minggu tenang sampai SKD.' };
-  var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Soal yang salah dicatat per topik, lalu dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang buku soal salah dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
+  var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Setiap hari tulis satu catatan singkat: pelajaran yang didapat hari ini. Catatan dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang catatan pelajaran dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
   function rowHtml(t, d0, thr) {
     var tot = S.totalScore(t), st = S.statusOf(t, d0);
     return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : ' · ' + ['siang', 'malam'][t.slot]) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
@@ -179,9 +181,9 @@
     return '<span class="pill ' + (v >= thr ? 'ok' : 'bad') + '">' + label + ' ' + v + (v >= thr ? ' ✓' : ' ✗') + '</span>';
   }
   function viewRecap() {
-    var h = pageHead('Rekap', 'Grafik skor dan soal salah');
-    h += '<div class="seg" role="tablist"><button role="tab" aria-selected="' + (ui.recapTab === 'skor') + '" data-tab="skor">Skor</button><button role="tab" aria-selected="' + (ui.recapTab === 'salah') + '" data-tab="salah">Soal salah</button></div>';
-    if (ui.recapTab === 'salah') return h + notesBlock();
+    var h = pageHead('Rekap', 'Grafik skor dan pelajaran harian');
+    h += '<div class="seg" role="tablist"><button role="tab" aria-selected="' + (ui.recapTab !== 'pelajaran') + '" data-tab="skor">Skor</button><button role="tab" aria-selected="' + (ui.recapTab === 'pelajaran') + '" data-tab="pelajaran">Pelajaran</button></div>';
+    if (ui.recapTab === 'pelajaran') return h + lessonsBlock();
     var items = [['twk', 'TWK'], ['tiu', 'TIU'], ['tkp', 'TKP'], ['total', 'Total']];
     h += warnings({ trend: true });
     h += '<div class="seg small">' + items.map(function (it) { return '<button aria-pressed="' + (ui.series === it[0]) + '" data-series="' + it[0] + '">' + it[1] + '</button>'; }).join('') + '</div>';
@@ -221,20 +223,14 @@
     return '<div class="card"><h2 class="sec">Rata-rata per minggu</h2><table class="avg"><thead><tr><th></th><th>TWK</th><th>TIU</th><th>TKP</th><th>Total</th><th>TO</th></tr></thead><tbody>' + body + '</tbody></table></div>';
   }
 
-  /* ---------- Catatan (buku soal salah) ---------- */
-  function notesBlock() {
-    var sub = ui.noteSub, topic = ui.noteTopic, all = state.wrong;
-    var topics = {}; all.forEach(function (w) { if (sub === 'Semua' || w.subtest === sub) topics[w.topic] = 1; });
-    if (topic && !topics[topic]) topic = ui.noteTopic = '';
-    var shown = all.filter(function (w) { return (sub === 'Semua' || w.subtest === sub) && (!topic || w.topic === topic); }).slice().reverse();
-    var h = '<p class="hint">Dibaca ulang tiap Minggu pukul 19.30.</p>';
-    h += '<button class="btn primary block" data-act="note-new">+ Tambah catatan</button>';
-    h += '<div class="seg small">' + ['Semua'].concat(S.SUBTESTS).map(function (s) { return '<button aria-pressed="' + (sub === s) + '" data-notesub="' + s + '">' + s + '</button>'; }).join('') + '</div>';
-    h += '<div class="field"><label for="topicsel">Topik</label><select id="topicsel" data-topicsel><option value="">Semua topik</option>' + Object.keys(topics).sort().map(function (t) { return '<option value="' + esc(t) + '"' + (t === topic ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>';
-    if (!all.length) h += '<div class="card empty"><p>Belum ada catatan. Catat soal yang salah per topik, misalnya “TWK – Pancasila”, lalu baca ulang tiap Minggu malam.</p></div>';
-    else if (!shown.length) h += '<div class="card empty"><p>Tidak ada catatan untuk filter ini.</p></div>';
-    h += '<ul class="notes">' + shown.map(function (w) {
-      return '<li class="note-card"><div class="rowline"><span><span class="pill sub-' + w.subtest + '">' + w.subtest + '</span> ' + esc(w.topic) + '</span><span class="sub">' + (w.created ? esc(S.fmtShort(w.created)) : '') + '</span></div><p class="ntext">' + esc(w.note) + '</p><div class="rowline"><span class="sub">' + (w.reads ? 'Dibaca ulang ' + w.reads + '×' + (w.lastRead ? ', terakhir ' + esc(S.fmtShort(w.lastRead)) : '') : 'Belum dibaca ulang') + '</span><span><button class="btn small" data-read="' + esc(w.id) + '">Sudah dibaca ulang</button> <button class="btn small" data-note="' + esc(w.id) + '">Ubah</button></span></div></li>';
+  /* ---------- Pelajaran harian ---------- */
+  function lessonsBlock() {
+    var dates = S.lessonDates(state), t0 = today();
+    var h = '<p class="hint">Satu catatan singkat per hari: apa yang dipelajari hari ini. Dibaca ulang tiap Minggu pukul 19.30.</p>';
+    h += '<button class="btn primary block" data-act="lesson-today">' + (state.lessons[t0] ? 'Ubah pelajaran hari ini' : '+ Tulis pelajaran hari ini') + '</button>';
+    if (!dates.length) h += '<div class="card empty"><p>Belum ada catatan. Tulis satu atau dua kalimat tentang pelajaran yang didapat hari ini, misalnya “TWK: bedakan Pancasila sebagai dasar negara dan pandangan hidup”.</p></div>';
+    h += '<ul class="notes">' + dates.map(function (d) {
+      return '<li class="note-card"><div class="rowline"><span>' + esc(S.fmtLong(d)) + '</span><button class="btn small" data-lesson="' + d + '">Ubah</button></div><p class="ntext">' + esc(state.lessons[d]) + '</p></li>';
     }).join('') + '</ul>';
     return h;
   }
@@ -298,26 +294,17 @@
   }
   function openTryout(id) { ui.sheet = { type: 'tryout', id: id }; renderTryoutSheet(); if (!sheet.open) sheet.showModal(); }
 
-  function openNote(id) {
-    var w = id ? state.wrong.filter(function (x) { return x.id === id; })[0] : null;
-    ui.sheet = { type: 'note', id: id || null, sub: w ? w.subtest : 'TWK' };
-    var sub = ui.sheet.sub;
-    sheetBody.innerHTML = '<div class="sh-h"><h2>' + (w ? 'Ubah catatan' : 'Catatan baru') + '</h2><button class="btn small" data-act="close-sheet" aria-label="Tutup">Batal</button></div>' +
-      '<div class="field"><label for="n-sub">Subtes</label><select id="n-sub">' + S.SUBTESTS.map(function (s) { return '<option' + (s === sub ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>' +
-      '<div class="field"><label for="n-topic">Topik</label><input id="n-topic" list="n-topics" maxlength="80" autocomplete="off" value="' + esc(w ? w.topic : '') + '" placeholder="mis. Pancasila"><datalist id="n-topics"></datalist></div>' +
-      '<div class="field"><label for="n-note">Soal dan konsep yang benar</label><textarea id="n-note" rows="6" maxlength="3000" placeholder="Apa yang salah, jawaban yang benar, dan alasannya">' + esc(w ? w.note : '') + '</textarea></div><p class="warn-inline bad" id="n-err"></p>' +
-      '<div class="btns"><button class="btn primary" data-act="note-save">Simpan</button>' + (w ? '<button class="btn bad" data-act="note-del">Hapus</button>' : '') + '</div>';
-    fillTopics(); sheet.showModal();
-  }
-  function fillTopics() {
-    var sub = document.getElementById('n-sub').value, set = {};
-    S.TOPICS[sub].forEach(function (t) { set[t] = 1; });
-    state.wrong.forEach(function (w) { if (w.subtest === sub) set[w.topic] = 1; });
-    document.getElementById('n-topics').innerHTML = Object.keys(set).map(function (t) { return '<option value="' + esc(t) + '">'; }).join('');
+  function openLesson(date) {
+    var cur = state.lessons[date] || '';
+    ui.sheet = { type: 'lesson', date: date };
+    sheetBody.innerHTML = '<div class="sh-h"><div><h2>Pelajaran</h2><p class="sub">' + esc(S.fmtLong(date)) + '</p></div><button class="btn small" data-act="close-sheet" aria-label="Tutup">Batal</button></div>' +
+      '<div class="field"><label for="l-text">Apa yang dipelajari?</label><textarea id="l-text" rows="6" maxlength="' + S.LESSON_MAX + '" placeholder="Satu atau dua kalimat cukup">' + esc(cur) + '</textarea></div><p class="warn-inline bad" id="l-err"></p>' +
+      '<div class="btns"><button class="btn primary" data-act="lesson-save">Simpan</button>' + (cur ? '<button class="btn bad" data-act="lesson-del">Hapus</button>' : '') + '</div>';
+    sheet.showModal();
   }
 
   /* ---------- Render utama ---------- */
-  function route() { var r = (location.hash || '').replace(/^#\/?/, ''); r = ALIAS[r] || r; return ROUTES.indexOf(r) >= 0 ? r : 'tryout'; }
+  function route() { var r = (location.hash || '').replace(/^#\/?/, ''); if (r === 'catatan') { ui.recapTab = 'pelajaran'; try { history.replaceState(null, '', '#/rekap'); } catch (er) { /* abaikan */ } r = 'rekap'; } r = ALIAS[r] || r; return ROUTES.indexOf(r) >= 0 ? r : 'tryout'; }
   function render() {
     var r = route(), fn = { tryout: viewTryout, rekap: viewRecap, pengaturan: viewSettings }[r];
     var y = window.scrollY;
@@ -337,29 +324,23 @@
 
   /* ---------- Event ---------- */
   document.addEventListener('click', function (e) {
-    var el = e.target.closest('[data-open],[data-act],[data-tab],[data-series],[data-notesub],[data-note],[data-read],[data-theme]');
+    var el = e.target.closest('[data-open],[data-act],[data-tab],[data-series],[data-lesson],[data-theme]');
     if (!el) { if (e.target === sheet) sheet.close(); return; }
     if (el.dataset.open) return openTryout(el.dataset.open);
     if (el.dataset.tab) { ui.recapTab = el.dataset.tab; return render(); }
     if (el.dataset.series) { ui.series = el.dataset.series; return render(); }
-    if (el.dataset.notesub) { ui.noteSub = el.dataset.notesub; return render(); }
-    if (el.dataset.note) return openNote(el.dataset.note);
-    if (el.dataset.read) {
-      var w = state.wrong.filter(function (x) { return x.id === el.dataset.read; })[0];
-      if (w) { w.reads++; w.lastRead = today(); afterChange(); render(); toast('Dicatat: dibaca ulang.'); }
-      return;
-    }
+    if (el.dataset.lesson) return openLesson(el.dataset.lesson);
     if (el.dataset.theme) { state.settings.theme = el.dataset.theme; afterChange(); applyTheme(); return render(); }
     var act = el.dataset.act;
-    if (act === 'goto-notes') { ui.recapTab = 'salah'; if (route() === 'rekap') render(); else location.hash = '#/rekap'; window.scrollTo(0, 0); }
+    if (act === 'goto-lessons') { ui.recapTab = 'pelajaran'; if (route() === 'rekap') render(); else location.hash = '#/rekap'; window.scrollTo(0, 0); }
     else if (act === 'close-sheet') sheet.close();
     else if (act === 'move') doMove();
     else if (act === 'unmove') { S.resetMove(state, ui.sheet.id); afterChange(); toast('Dikembalikan ke jadwal awal.'); renderTryoutSheet(); }
-    else if (act === 'note-new') openNote(null);
-    else if (act === 'note-save') saveNote();
-    else if (act === 'note-del') {
-      var id = ui.sheet.id;
-      confirmDialog('Hapus catatan?', 'Catatan ini akan dihapus permanen.', 'Hapus').then(function (ok) { if (!ok) return; state.wrong = state.wrong.filter(function (x) { return x.id !== id; }); afterChange(); sheet.close(); toast('Catatan dihapus.'); });
+    else if (act === 'lesson-today') openLesson(today());
+    else if (act === 'lesson-save') saveLesson();
+    else if (act === 'lesson-del') {
+      var ld = ui.sheet.date;
+      confirmDialog('Hapus catatan?', 'Catatan pelajaran hari itu akan dihapus permanen.', 'Hapus').then(function (ok) { if (!ok) return; S.setLesson(state, ld, ''); afterChange(); sheet.close(); render(); toast('Catatan dihapus.'); });
     }
     else if (act === 'export') doExport();
     else if (act === 'reset') confirmDialog('Reset semua data?', 'Semua skor, catatan, geseran jadwal, dan pengaturan akan dihapus dari perangkat ini. Pastikan sudah Ekspor bila perlu. Tindakan ini tidak bisa dibatalkan.', 'Hapus semua').then(function (ok) {
@@ -372,7 +353,6 @@
     var t = e.target;
     if (t.matches('[data-done]')) { S.setField(state, t.dataset.done, { done: t.checked }); afterChange(); render(); return; }
     if (t.matches('[data-rev]')) { S.setField(state, t.dataset.rev, { reviewed: t.checked }); afterChange(); render(); return; }
-    if (t.matches('[data-topicsel]')) { ui.noteTopic = t.value; render(); return; }
     if (t.matches('[data-lead]')) { state.settings.lead = +t.value; afterChange(); return; }
     if (t.matches('[data-set=skdDate]')) {
       if (S.isDate(t.value)) { state.settings.skdDate = t.value; afterChange(); toast('Tanggal SKD diperbarui.'); } else { t.value = state.settings.skdDate; toast('Tanggal tidak valid.'); }
@@ -384,7 +364,6 @@
       return;
     }
     if (t.id === 'import-file') return doImport(t);
-    if (t.id === 'n-sub') return fillTopics();
     if (t.matches('#sheet [data-f=done]')) { S.setField(state, ui.sheet.id, { done: t.checked }); afterChange(); return; }
     if (t.matches('#sheet [data-f=reviewed]')) { S.setField(state, ui.sheet.id, { reviewed: t.checked }); afterChange(); return; }
   });
@@ -425,15 +404,10 @@
     renderTryoutSheet();
     var m2 = document.getElementById('move-msg'); if (m2) m2.textContent = 'Dijadwalkan ' + S.fmtLong(date) + '.' + note;
   }
-  function saveNote() {
-    var sub = document.getElementById('n-sub').value, topic = document.getElementById('n-topic').value.trim(), note = document.getElementById('n-note').value.trim(), err = document.getElementById('n-err');
-    if (!topic) { err.textContent = 'Isi topik.'; return; }
-    if (!note) { err.textContent = 'Isi catatan.'; return; }
-    if (ui.sheet.id) {
-      var w = state.wrong.filter(function (x) { return x.id === ui.sheet.id; })[0];
-      if (w) { w.subtest = sub; w.topic = topic; w.note = note; }
-    } else state.wrong.push({ id: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), subtest: sub, topic: topic, note: note, created: today(), reads: 0, lastRead: '' });
-    afterChange(); sheet.close(); toast('Catatan disimpan.');
+  function saveLesson() {
+    var txt = document.getElementById('l-text').value.trim(), err = document.getElementById('l-err'), d = ui.sheet.date;
+    if (!txt && !state.lessons[d]) { err.textContent = 'Isi catatan.'; return; }
+    S.setLesson(state, d, txt); afterChange(); sheet.close(); render(); toast(txt ? 'Catatan disimpan.' : 'Catatan dihapus.');
   }
   function doExport() {
     var json = JSON.stringify(S.exportData(state), null, 2);
@@ -453,7 +427,7 @@
       var r = S.parseImport(String(rd.result));
       if (!r.ok) { toast('Impor gagal: ' + r.error); return; }
       var done = S.totalStats(r.state).done;
-      confirmDialog('Ganti data dengan cadangan?', 'Data saat ini akan diganti: ' + done + ' tryout selesai, ' + r.state.wrong.length + ' catatan soal salah.', 'Ganti data').then(function (ok) {
+      confirmDialog('Ganti data dengan cadangan?', 'Data saat ini akan diganti: ' + done + ' tryout selesai, ' + Object.keys(r.state.lessons).length + ' catatan pelajaran.', 'Ganti data').then(function (ok) {
         if (!ok) return; state = r.state; afterChange(); applyTheme(); render(); toast('Impor berhasil.');
       });
     };

@@ -44,9 +44,9 @@ function seedState() {
     k++;
     S.setField(st, t.id, { done: true, reviewed: t.date < '2026-12-10', name: 'Paket Bimbel ' + String.fromCharCode(64 + (k % 26 || 26)) + ' ' + k, twk: twk[t.week] + (k % 2 ? 1 : -1), tiu: 78 + (k % 7), tkp: tkp[t.week] + (k % 3) });
   });
-  st.wrong.push({ id: 'w1', subtest: 'TWK', topic: 'Pancasila', note: 'Sila ke-3: persatuan Indonesia, bukan kerakyatan.', created: '2026-11-25', reads: 1, lastRead: '2026-11-29' });
-  st.wrong.push({ id: 'w2', subtest: 'TKP', topic: 'Pelayanan publik', note: 'Pilih jawaban yang menjelaskan prosedur dengan ramah dan tetap sesuai aturan.', created: '2026-12-02', reads: 0, lastRead: '' });
-  st.wrong.push({ id: 'w3', subtest: 'TIU', topic: 'Silogisme', note: 'Semua A adalah B tidak berarti semua B adalah A.', created: '2026-12-05', reads: 0, lastRead: '' });
+  S.setLesson(st, '2026-11-25', 'TWK: sila ke-3 itu persatuan Indonesia, bukan kerakyatan.');
+  S.setLesson(st, '2026-12-02', 'TKP: pilih jawaban yang menjelaskan prosedur dengan ramah dan tetap sesuai aturan.');
+  S.setLesson(st, '2026-12-05', 'TIU: semua A adalah B tidak berarti semua B adalah A.');
   return st;
 }
 
@@ -79,7 +79,7 @@ function seedState() {
     const target = ROUTE_MAP[h] || h;
     await page.evaluate(x => { location.hash = x; }, target); await page.waitForTimeout(80);
     if (target === '#/tryout') await page.evaluate(() => document.querySelectorAll('details.week[data-w]').forEach(d => { d.open = true; }));
-    if (target === '#/rekap') await page.click(h === '#/catatan' || h === '#/rekap-salah' ? '[data-tab=salah]' : '[data-tab=skor]');
+    if (target === '#/rekap') await page.click(h === '#/catatan' || h === '#/rekap-salah' ? '[data-tab=pelajaran]' : '[data-tab=skor]');
     await page.waitForTimeout(40);
   };
   const toWeeks = page => page.locator('#view h2:has-text("Semua minggu")').evaluate(e => e.scrollIntoView());
@@ -197,7 +197,7 @@ function seedState() {
     check('tabel rata-rata per minggu untuk 3 minggu', rows === 3, rows);
     await shot(page, '04-skor-tren-twk-375');
     await page.click('[data-series=tkp]'); await shot(page, '05-skor-tren-tkp-375');
-    await go(page, '#/catatan'); await shot(page, '06-rekap-soal-salah-375');
+    await go(page, '#/catatan'); await shot(page, '06-rekap-pelajaran-375');
     await go(page, '#/pengaturan'); await shot(page, '07-pengaturan-375');
     // ekspor
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-act=export]')]);
@@ -224,7 +224,7 @@ function seedState() {
     await page.click('#confirm [value=ok]');
     await page.waitForTimeout(100);
     const afterReset = await stateOf(page);
-    check('reset dengan konfirmasi menghapus semua data', Object.keys(afterReset.tryouts).length === 0 && afterReset.wrong.length === 0);
+    check('reset dengan konfirmasi menghapus semua data', Object.keys(afterReset.tryouts).length === 0 && Object.keys(afterReset.lessons).length === 0);
     await page.setInputFiles('#import-file', { name: fname, mimeType: 'application/json', buffer: Buffer.from(text) });
     await page.waitForSelector('#confirm[open]');
     check('dialog impor menyebut jumlah data', /tryout selesai/.test(await page.textContent('#confirm p')));
@@ -233,39 +233,32 @@ function seedState() {
     await ctx.close();
   }
 
-  // ---------------------------------------------------------------- K11 catatan, K20 XSS
-  console.log('K11/K20 buku soal salah, pengingat Minggu 19.30, XSS');
+  // ---------------------------------------------------------------- K11 catatan pelajaran, K20 XSS
+  console.log('K11/K20 catatan pelajaran harian, pengingat Minggu 19.30, XSS');
   {
     const { ctx, page } = await open('2026-11-29T11:30:00Z', { hash: '#/hari-ini' }); // Minggu 19.30 WITA
     const nowTxt = await page.textContent('.ev.now');
-    check('Minggu 19.30: pengingat Baca ulang buku soal salah sedang berjalan', /Baca ulang buku soal salah/.test(nowTxt) && /Buka catatan/.test(nowTxt), nowTxt);
+    check('Minggu 19.30: pengingat Baca ulang pelajaran minggu ini sedang berjalan', /Baca ulang pelajaran minggu ini/.test(nowTxt) && /Buka catatan/.test(nowTxt), nowTxt);
+    check('tab Tryout punya kartu Pelajaran hari ini (belum ditulis)', /Pelajaran hari ini/.test(await page.textContent('#view')) && /Belum ditulis/.test(await page.textContent('#view')));
+    await page.click('[data-act=lesson-today]');
+    check('editor pelajaran: hanya satu kolom teks (tanpa subtes/topik)', (await page.locator('#l-text').count()) === 1 && (await page.locator('#n-sub, #n-topic').count()) === 0);
+    await page.click('[data-act=lesson-save]');
+    check('simpan kosong ditolak dan tidak menyimpan apa pun', /Isi catatan/.test(await page.textContent('#l-err')) && Object.keys(((await stateOf(page)) || {}).lessons || {}).length === 0);
+    await page.fill('#l-text', 'Sila ke-3 <img src=x onerror="window.__xss=1"> <script>window.__xss=2</script>');
+    await page.click('[data-act=lesson-save]'); await page.waitForTimeout(150);
+    check('tersimpan untuk tanggal hari ini (WITA 2026-11-29) dan tampil di kartu', (await stateOf(page)).lessons['2026-11-29'].startsWith('Sila ke-3') && /Sila ke-3/.test(await page.textContent('#view')));
+    check('XSS: HTML ditampilkan sebagai teks, tidak dieksekusi', (await page.evaluate(() => window.__xss)) === undefined && (await page.locator('#view img').count()) === 0);
     await go(page, '#/catatan');
-    await page.click('[data-act=note-new]');
-    await page.selectOption('#n-sub', 'TWK');
-    await page.fill('#n-topic', 'Pancasila');
-    await page.fill('#n-note', 'Sila ke-3 <img src=x onerror="window.__xss=1"> <script>window.__xss=2</script>');
-    await page.click('[data-act=note-save]'); await page.waitForTimeout(150);
-    await page.click('[data-act=note-new]');
-    await page.selectOption('#n-sub', 'TKP');
-    await page.fill('#n-topic', 'Pelayanan publik');
-    await page.fill('#n-note', 'Utamakan pelayanan prima.');
-    await page.click('[data-act=note-save]'); await page.waitForTimeout(150);
-    check('dua catatan tersimpan', (await page.locator('.note-card').count()) === 2);
-    check('XSS: HTML ditampilkan sebagai teks, tidak dieksekusi', (await page.evaluate(() => window.__xss)) === undefined && /<img src=x/.test(await page.textContent('.note-card:has-text("Sila") .ntext')) && (await page.locator('.note-card img').count()) === 0);
-    await page.click('[data-notesub=TKP]');
-    check('filter subtes TKP menyisakan 1 catatan', (await page.locator('.note-card').count()) === 1);
-    await page.click('[data-notesub=Semua]');
-    await page.selectOption('[data-topicsel]', 'Pancasila');
-    check('filter topik Pancasila menyisakan 1 catatan', (await page.locator('.note-card').count()) === 1 && /TWK/.test(await page.textContent('.note-card')));
-    await page.click('[data-read]');
-    check('tombol sudah dibaca ulang mencatat 1×', /Dibaca ulang 1×/.test(await page.textContent('.note-card')));
+    check('Rekap > Pelajaran: 1 catatan di daftar', (await page.locator('.note-card').count()) === 1 && /Minggu, 29 November 2026/.test(await page.textContent('.note-card')));
+    await page.click('[data-lesson]'); await page.fill('#l-text', 'Diubah'); await page.click('[data-act=lesson-save]'); await page.waitForTimeout(150);
+    check('ubah catatan', /Diubah/.test(await page.textContent('#view')) && (await page.locator('.note-card').count()) === 1);
     await page.reload(); await page.waitForSelector('#view h1');
-    check('catatan tetap ada setelah reload', (await (await stateOf(page)).wrong.length) === 2);
+    check('catatan tetap ada setelah reload', (await stateOf(page)).lessons['2026-11-29'] === 'Diubah');
     await go(page, '#/catatan');
-    await page.click('[data-note]'); await page.fill('#n-note', 'Diubah'); await page.click('[data-act=note-save]'); await page.waitForTimeout(150);
-    check('ubah catatan', /Diubah/.test(await page.textContent('#view')));
-    await page.click('[data-note]'); await page.click('[data-act=note-del]'); await page.click('#confirm [value=ok]'); await page.waitForTimeout(100);
-    check('hapus catatan dengan konfirmasi', (await stateOf(page)).wrong.length === 1);
+    await page.click('[data-lesson]'); await page.click('[data-act=lesson-del]'); await page.click('#confirm [value=ok]'); await page.waitForTimeout(100);
+    check('hapus catatan dengan konfirmasi', Object.keys((await stateOf(page)).lessons).length === 0 && (await page.locator('.note-card').count()) === 0);
+    await page.click('[data-act=lesson-today]'); await page.fill('#l-text', 'Hari ini belajar deret angka'); await page.click('[data-act=lesson-save]'); await page.waitForTimeout(100);
+    check('tombol Tulis di Rekap menyimpan catatan hari ini', (await stateOf(page)).lessons['2026-11-29'] === 'Hari ini belajar deret angka');
     // XSS lewat nama paket dan impor
     await go(page, '#/skor'); await page.click('[data-open=T001]'); await page.fill('#f-name', '"><img src=x onerror=window.__xss=3>');
     await closeSheet(page);
@@ -313,18 +306,18 @@ function seedState() {
     check('hanya 2 tautan di navigasi bawah', (await page.locator('nav.bottom a').count()) === 2);
     await page.click('nav a[href="#/rekap"]');
     check('tab Rekap aktif: grafik skor', (await h1()) === 'Rekap' && (await cur()) === 'Rekap' && (await page.locator('[data-series]').count()) === 4);
-    await page.click('[data-tab=salah]');
-    check('Rekap > Soal salah: tombol tambah catatan dan filter subtes', (await page.locator('[data-act=note-new]').count()) === 1 && (await page.locator('[data-notesub]').count()) === 4);
+    await page.click('[data-tab=pelajaran]');
+    check('Rekap > Pelajaran: tombol tulis pelajaran hari ini, tanpa filter subtes', (await page.locator('[data-act=lesson-today]').count()) === 1 && (await page.locator('[data-notesub], [data-topicsel]').count()) === 0);
     await page.click('a.gear');
     check('ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif', (await h1()) === 'Pengaturan' && (await cur()) === '' && (await page.locator('#skd').count()) === 1);
     await page.click('a.gear:has-text("Kembali")');
     check('tombol Kembali ke Tryout', (await h1()) === 'Tryout');
     const g = await page.$eval('a.gear', e => { const r = e.getBoundingClientRect(); return [Math.round(r.right), innerWidth, Math.round(r.top)]; });
     check('gerigi berada di pojok kanan atas', g[0] >= g[1] - 24 && g[2] < 40, g);
-    await page.locator('.ev.now [data-act=goto-notes]').click();
-    check('pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Soal salah', (await h1()) === 'Rekap' && (await page.locator('[data-act=note-new]').count()) === 1);
+    await page.locator('.ev.now [data-act=goto-lessons]').click();
+    check('pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Pelajaran', (await h1()) === 'Rekap' && (await page.locator('[data-act=lesson-today]').count()) === 1);
     await page.evaluate(() => { location.hash = '#/catatan'; }); await page.waitForTimeout(80);
-    check('alamat lama #/catatan membuka Rekap', (await h1()) === 'Rekap');
+    check('alamat lama #/catatan membuka Rekap > Pelajaran', (await h1()) === 'Rekap' && (await page.locator('[data-act=lesson-today]').count()) === 1);
     await ctx.close();
   }
 
@@ -360,7 +353,7 @@ function seedState() {
     await shot(g.page, '13-gelap-tryout-375');
     await go(g.page, '#/tryout'); await toWeeks(g.page); await g.page.waitForTimeout(100); await shot(g.page, '14-gelap-minggu-375');
     await go(g.page, '#/rekap'); await shot(g.page, '15-gelap-tren-375');
-    await go(g.page, '#/catatan'); await shot(g.page, '16-gelap-soal-salah-375');
+    await go(g.page, '#/catatan'); await shot(g.page, '16-gelap-pelajaran-375');
     await g.ctx.close();
   }
 
@@ -475,7 +468,7 @@ function seedState() {
     check('service worker aktif dengan scope akar situs', swState.active && swState.scope === base, swState);
     await page.reload(); await page.waitForSelector('#view h1');
     check('halaman dikendalikan service worker setelah muat ulang', await page.evaluate(() => !!navigator.serviceWorker.controller));
-    const cached = await page.evaluate(async () => (await (await caches.open('tryout-skd-v4')).keys()).map(r => new URL(r.url).pathname));
+    const cached = await page.evaluate(async () => { const names = (await caches.keys()).filter(k => k.startsWith('tryout-skd-')); return names.length === 1 ? (await (await caches.open(names[0])).keys()).map(r => new URL(r.url).pathname) : ['cache:' + names.join()]; });
     check('cangkang aplikasi ter-cache', ['/index.html', '/app.js', '/schedule.js', '/styles.css', '/manifest.webmanifest', '/icons/icon-192.png'].every(p => cached.includes(p)), cached);
     await page.check('[data-done=T001]');
     await ctx.setOffline(true);
@@ -484,8 +477,8 @@ function seedState() {
     check('OFFLINE: data lokal tetap ada (1/120)', /1\/120/.test(await page.textContent('.card')));
     await go(page, '#/kalender');
     check('OFFLINE: kalender 11 minggu tampil', (await page.locator('details.week[data-w]').count()) === 11);
-    await go(page, '#/catatan'); await page.click('[data-act=note-new]'); await page.fill('#n-topic', 'Offline'); await page.fill('#n-note', 'Catatan saat offline'); await page.click('[data-act=note-save]');
-    check('OFFLINE: menambah catatan berfungsi', (await stateOf(page)).wrong.length === 1);
+    await go(page, '#/catatan'); await page.click('[data-act=lesson-today]'); await page.fill('#l-text', 'Catatan saat offline'); await page.click('[data-act=lesson-save]');
+    check('OFFLINE: menulis pelajaran berfungsi', Object.keys((await stateOf(page)).lessons).length === 1);
     const navOffline = await page.evaluate(async () => { const r = await fetch('./index.html'); return r.status; });
     check('OFFLINE: berkas aplikasi dilayani dari cache', navOffline === 200);
     await go(page, '#/pengaturan');

@@ -3,8 +3,8 @@
 Aplikasi web statis (HTML, CSS, JavaScript murni) untuk mengatur 120 tryout SKD CPNS.
 **Jadwal (revisi 24 November 2026):** mulai Selasa 24 November 2026, **12 tryout per minggu**: Senin–Kamis 2 per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam 19.00), Sabtu 2 (siang dan malam), Minggu 1 (siang 13.15).
 Hasilnya 120 tryout selesai **Senin 1 Februari 2027** (11 minggu: 10 tryout di minggu 1, 12 per minggu di minggu 2–10, 2 di minggu 11), sebelum SKD bawaan 8 Februari 2027.
-Minggu malam 19.30 tetap ada pengingat baca ulang buku soal salah. Jumat siang dikosongkan untuk Jumatan. Jumat 25 Des (Natal) dan 1 Jan (Tahun Baru) tetap punya 1 tryout malam; aplikasi memberi peringatan dan Anda bisa menggesernya ke hari lain di minggu itu.
-Setelah 1 Februari tidak ada tryout lagi: 6 hari tenang sebelum SKD (baca ulang buku soal salah dan jaga tidur). Bila tanggal SKD resmi lebih awal, aplikasi menampilkan peringatan sampai Anda mengubah tanggal SKD di Pengaturan. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
+Minggu malam 19.30 tetap ada pengingat baca ulang catatan pelajaran. Jumat siang dikosongkan untuk Jumatan. Jumat 25 Des (Natal) dan 1 Jan (Tahun Baru) tetap punya 1 tryout malam; aplikasi memberi peringatan dan Anda bisa menggesernya ke hari lain di minggu itu.
+Setelah 1 Februari tidak ada tryout lagi: 6 hari tenang sebelum SKD (baca ulang catatan pelajaran dan jaga tidur). Bila tanggal SKD resmi lebih awal, aplikasi menampilkan peringatan sampai Anda mengubah tanggal SKD di Pengaturan. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
 Tanpa backend, tanpa login. Semua data disimpan di `localStorage` perangkat; cadangan lewat Ekspor/Impor JSON.
 
 Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
@@ -14,7 +14,7 @@ Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
 Navigasi sederhana: **2 tab** di bawah (Tryout, Rekap) dan ikon gerigi di pojok kanan atas untuk Pengaturan.
 
 - **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/120 dan per minggu), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 11 minggu yang bisa dibuka. Tiap minggu berisi tryout-nya dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
-- **Tab Rekap**: *Skor* (grafik tren TWK/TIU/TKP/total dengan garis ambang, rata-rata per minggu, peringatan skor mentok) dan *Soal salah* (buku soal salah per subtes dan topik, filter, penanda sudah dibaca ulang; pengingat Minggu 19.30).
+- **Tab Rekap**: *Skor* (grafik tren TWK/TIU/TKP/total dengan garis ambang, rata-rata per minggu, peringatan skor mentok) dan *Pelajaran* (satu catatan singkat per hari: pelajaran yang didapat hari ini, ditulis dari kartu "Pelajaran hari ini" di tab Tryout atau dari tab ini; daftar terbaru dulu; pengingat baca ulang Minggu 19.30). Fitur buku soal salah per soal sudah dihapus; data lama dari fitur itu diabaikan saat dimuat/impor.
 - **Pengaturan** (ikon gerigi): tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub (gelap #0d1117, terang #ffffff, atau otomatis mengikuti sistem; semua warna solid tanpa transparansi), notifikasi, ekspor/impor, reset dengan konfirmasi, dan 7 aturan tetap.
 - Alamat lama (`#/hari-ini`, `#/kalender`, `#/skor`, `#/catatan`) masih diarahkan ke tab yang sesuai.
 
@@ -86,8 +86,8 @@ pada pembukaan berikutnya (kadang perlu dua kali buka). Jika mengubah daftar ber
 ## Pengujian
 
 ```bash
-node tests/logic.test.js                          # 39 tes logika, tanpa dependensi
-npm i -D playwright && node tests/e2e.test.js     # 130 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
+node tests/logic.test.js                          # 41 tes logika, tanpa dependensi
+npm i -D playwright && node tests/e2e.test.js     # 132 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
 Catatan: versi pertama aplikasi mengikuti PDF "Jadwal Tryout Disiplin" (12 tryout per minggu, Senin–Minggu). Sejak revisi 24 November 2026 jadwal memakai pola di atas (12 tryout per minggu, Senin–Minggu); 7 aturan tetap dari PDF tetap berlaku, kecuali aturan ke-6 yang menyesuaikan.

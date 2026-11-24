@@ -2,7 +2,7 @@
 
 **Revisi jadwal 2026-11-24:** mulai Selasa 24 Nov 2026, 12 tryout/minggu (Sen–Kam 2/hari, Jumat 1 malam, Sabtu 2, Minggu 1 siang), 120 tryout, selesai Senin 1 Feb 2027 (sebelum SKD bawaan 8 Feb). Baris K1–K3 dan K8 di bawah sudah dijalankan ulang untuk jadwal ini (lihat `tests/hasil-uji.txt`).
 
-Hasil mentah: `tests/hasil-uji.txt` (39 tes logika + 130 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
+Hasil mentah: `tests/hasil-uji.txt` (41 tes logika + 132 pemeriksaan browser, 0 gagal). Screenshot di `screenshots/`.
 Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), zona waktu peramban sengaja `America/Los_Angeles`, jam palsu untuk skenario waktu.
 
 | # | Kriteria | Bukti |
@@ -17,7 +17,7 @@ Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), 
 | K8 | Terlewat | `logic` dan `e2e`: peringatan muncul untuk tryout lewat tanggal; hilang bila digeser ke depan |
 | K9 | Paket dobel | `logic` (huruf/spasi/tanda baca diabaikan) dan `e2e` (peringatan di sheet dan halaman Skor) |
 | K10 | Tren dan skor mentok | `e2e`: data contoh 3 minggu → grafik SVG dengan garis ambang, tabel rata-rata, peringatan mentok TWK dan tidak untuk TKP yang naik. Screenshot 04, 05. `logic`: aturan mentok termasuk kasus batas |
-| K11 | Buku soal salah | `e2e`: tambah, ubah, hapus, filter subtes dan topik, penanda dibaca ulang, persisten; Minggu 19.30 kegiatan "Baca ulang buku soal salah" aktif. Screenshot 06 |
+| K11 | Catatan pelajaran harian (menggantikan buku soal salah, 2026-11-24) | `logic`: simpan/ubah/kosong=hapus, tanggal tidak valid, batas 1000 huruf, urutan terbaru dulu, cadangan lama berisi `wrong` tetap bisa diimpor tanpa merusak. `e2e`: kartu "Pelajaran hari ini" di tab Tryout, editor satu kolom, simpan kosong ditolak, simpan/ubah/hapus (dengan konfirmasi), persisten setelah reload, jalan offline; Minggu 19.30 "Baca ulang pelajaran minggu ini" dengan tombol ke Rekap > Pelajaran; `#/catatan` membuka tab Pelajaran. Screenshot 06 |
 | K12 | Kalender | Kini bagian tab Tryout (11 minggu, status tiap tryout). Screenshot 02; `e2e`: 11 minggu, 120 baris, catatan Natal dan tanda ↔ pada yang digeser |
 | K13 | Pengaturan | `e2e`: SKD, ambang, tema gelap/terang (warna latar berubah), reset batal dan reset terkonfirmasi. Screenshot 07, 08, 09 |
 | K14 | Persistensi | `e2e`: reload → skor, nama, status pembahasan, pengaturan, catatan tetap ada |
@@ -26,7 +26,7 @@ Browser uji: Chromium (Playwright 1.63), viewport 375×812 (juga 320 dan 1280), 
 | K17 | PWA offline | `e2e`: manifest valid, ikon 200, SW aktif dan mengendalikan halaman, cangkang ter-cache; `setOffline(true)` lalu reload → aplikasi termuat, data ada, kalender, tambah catatan jalan. Screenshot 12 |
 | K18 | Notifikasi | `e2e`: dengan izin (disimulasikan) tepat 5 menit sebelum Tryout 19.00 muncul satu kali; tanpa izin pengingat tetap mati dan aplikasi berfungsi |
 | K19 | Subpath GitHub Pages | `e2e`: server di `/tryout-skd-repo/` → tidak ada 404, SW ter-scope subpath, offline jalan |
-| Nav | Navigasi disederhanakan jadi 2 tab | `e2e` "Navigasi 2 tab": hanya 2 tautan di navigasi bawah (Tryout, Rekap); tab Tryout memuat timeline hari ini, progres, 10 minggu dan 120 baris tryout; Rekap memuat grafik dan Soal salah; ikon gerigi di pojok kanan atas membuka Pengaturan dan tombol Kembali; tombol "Buka catatan" Minggu 19.30 langsung ke Soal salah; alamat lama diarahkan. Semua tes fitur sebelumnya dijalankan ulang lewat 2 tab. Screenshot 01, 02, 13–16 |
+| Nav | Navigasi disederhanakan jadi 2 tab | `e2e` "Navigasi 2 tab": hanya 2 tautan di navigasi bawah (Tryout, Rekap); tab Tryout memuat timeline hari ini, progres, 11 minggu dan 120 baris tryout; Rekap memuat grafik dan Pelajaran; ikon gerigi di pojok kanan atas membuka Pengaturan dan tombol Kembali; tombol "Buka catatan" Minggu 19.30 langsung ke Soal salah; alamat lama diarahkan. Semua tes fitur sebelumnya dijalankan ulang lewat 2 tab. Screenshot 01, 02, 13–16 |
 | Tema | Warna gaya GitHub, solid | `e2e`: CSS tanpa rgba/opacity/gradient/blur; computed style gelap = #0d1117/#161b22/#30363d/#e6edf3 dan terang = #ffffff/#f6f8fa/#d0d7de/#1f2328; semua elemen solid (opacity 1, tanpa gradien); meta theme-color dan manifest ikut; mode otomatis mengikuti sistem. Screenshot 13–16. Putaran kedua: latar peringatan, sorotan, chip, dan pil dibuat netral (warna hanya pada garis tepi dan teks); tes memeriksa SEMUA elemen di 5 halaman dan 2 dialog (+ `::backdrop`) pada tema gelap dan terang: latar harus salah satu warna palet, tanpa alpha/opacity/bayangan/filter/gradien. Tes ini terbukti gagal pada CSS versi sebelumnya (tint merah/biru/kuning) dan lulus pada versi sekarang |
 | K20 | Escape HTML | `e2e`: `<img onerror>` dan `<script>` di catatan dan nama paket tampil sebagai teks, tidak dieksekusi |
 
