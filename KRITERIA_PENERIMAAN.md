@@ -1,6 +1,6 @@
 # Kriteria penerimaan — Jadwal Tryout SKD
 
-> **Revisi 2026-11-23 (permintaan Shandy):** mulai Selasa 24 Nov 2026, 2 tryout per hari (siang dan malam), hanya Senin–Kamis, 120 tryout tetap tercakup. K1–K3 di bawah berlaku untuk jadwal revisi: 120 tryout = 60 hari, 16 minggu (6, 14×8, 2), tryout terakhir Senin 8 Maret 2027; Jumat 25 Des dan 1 Jan tidak berisi tryout (tryout minggu itu masih bisa digeser ke hari lain di minggu yang sama, termasuk Jumat/akhir pekan). Tabel asli di bawah menggambarkan versi pertama (12/minggu, 10 minggu).
+> **Revisi 2026-11-24 (permintaan Shandy):** mulai Selasa 24 Nov 2026, 12 tryout per minggu (Sen–Kam 2 per hari, Jumat 1 malam, Sabtu 2, Minggu 1 siang) agar 120 tryout selesai sebelum SKD bawaan 8 Feb 2027. 11 minggu (10, 9×12, 2), tryout terakhir Senin 1 Feb 2027. Jumat 25 Des dan 1 Jan tetap punya 1 tryout malam (peringatan libur, bisa digeser dalam minggu yang sama). K1–K3 di bawah berlaku untuk jadwal ini.
 
 Ditulis sebelum coding. Setiap butir dibuktikan dengan tes nyata (lihat `BUKTI.md`).
 
@@ -12,7 +12,7 @@ buat akun SSCASN") dan 7 aturan tetap; keduanya ditampilkan sebagai catatan saja
 | # | Kriteria | Bukti yang diminta |
 |---|----------|--------------------|
 | K1 | Total tepat 120 tryout; tiap minggu 12; ID unik; periode 23 Nov 2026 – 31 Jan 2027 (Senin–Minggu) | tes logika (Node) |
-| K2 | Templat harian sesuai pesan: Sen–Kam 1 TO, Jum 2, Sab 4, Min 2; jam persis | tes logika |
+| K2 | Templat harian: Sen–Kam siang 13.15 + malam 19.00; Jumat malam 19.00; Sabtu siang + malam; Minggu siang 13.15 + baca ulang 19.30; jam persis | tes logika |
 | K3 | Jumat 25 Des 2026 dan Jumat 1 Jan 2027 ditandai libur dan tryoutnya bisa digeser ke hari lain di minggu yang sama; tidak bisa ke minggu lain; total tetap 120, tiap minggu tetap 12 | tes logika + tes browser |
 | K4 | Hari Ini: timeline, sorot kegiatan berjalan, hitung mundur ke kegiatan berikutnya (zona WITA) | tes browser dengan jam palsu |
 | K5 | Checklist: selesai, nama paket, skor TWK/TIU/TKP, total otomatis, status pembahasan | tes browser |

@@ -146,7 +146,7 @@
   }
 
   /* ---------- Kalender ---------- */
-  var WEEK_NOTES = { 1: 'Mulai Selasa 24 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des, hari tanpa tryout.', 6: 'Tahun Baru jatuh Jumat 1 Jan, hari tanpa tryout.', 16: 'Tryout terakhir: Senin 8 Maret 2027.' };
+  var WEEK_NOTES = { 1: 'Mulai Selasa 24 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des. Tryout malamnya boleh digeser ke hari lain di minggu ini.', 6: 'Tahun Baru jatuh Jumat 1 Jan. Tryout malamnya boleh digeser ke hari lain di minggu ini.', 11: 'Tryout terakhir: Senin 1 Februari 2027. Sesudahnya minggu tenang sampai SKD.' };
   var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Soal yang salah dicatat per topik, lalu dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang buku soal salah dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap 120.'];
   function rowHtml(t, d0, thr) {
     var tot = S.totalScore(t), st = S.statusOf(t, d0);
@@ -164,13 +164,13 @@
       if (WEEK_NOTES[w]) h += '<p class="note">' + esc(WEEK_NOTES[w]) + '</p>';
       h += '<ul class="list">' + wl.map(function (t) { return rowHtml(t, d0, thr); }).join('') + '</ul></details>';
     }
-    h += '<p class="hint">Jadwal: Senin–Kamis, 2 tryout per hari (siang 13.15 dan malam 19.00), tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
+    h += '<p class="hint">Jadwal: Senin–Kamis 2 tryout per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam), Sabtu 2 (siang dan malam), Minggu 1 (siang); tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
     return h;
   }
   function pageHead(title, sub, noGear) {
     return '<header class="page-h"><div><h1>' + esc(title) + '</h1><p>' + esc(sub) + '</p></div>' + (noGear ? '<a class="gear" href="#/tryout">Kembali</a>' : '<a class="gear" href="#/pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></a>') + '</header>';
   }
-  function viewTryout() { return pageHead('Tryout', '120 tryout · Sen–Kam') + todayBlock() + weeksBlock(); }
+  function viewTryout() { return pageHead('Tryout', '120 tryout · 12 per minggu') + todayBlock() + weeksBlock(); }
 
 
   /* ---------- Skor ---------- */

@@ -7,12 +7,13 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  // Revisi 2026-11-23: mulai Selasa 24 Nov 2026, 2 tryout per hari (siang dan malam), hanya Senin-Kamis.
-  // 120 tryout = 60 hari Senin-Kamis, tryout terakhir Senin 8 Maret 2027. Minggu 1 dihitung dari Senin 23 Nov.
+  // Revisi 2026-11-24: mulai Selasa 24 Nov 2026. Senin-Kamis 2 tryout per hari (siang dan malam),
+  // Jumat 1 (malam), Sabtu 2 (siang dan malam), Minggu 1 (siang) = 12 per minggu.
+  // 120 tryout selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb 2027. Minggu 1 dihitung dari Senin 23 Nov.
   var START_DATE = '2026-11-23'; // Senin awal minggu 1
   var FIRST_DATE = '2026-11-24'; // tryout pertama
   var TOTAL = 120;
-  var PER_DAY = [2, 2, 2, 2, 0, 0, 0]; // Senin..Minggu
+  var PER_DAY = [2, 2, 2, 2, 1, 2, 1]; // Senin..Minggu
   var DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   var MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   var HOLIDAYS = { '2026-12-25': 'Hari Raya Natal', '2027-01-01': 'Tahun Baru 2027' };
@@ -78,12 +79,20 @@
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
       extras: [block(T(9, 30)), block(T(16))]
     },
-    friday: { slots: [], fixed: [{ kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }], extras: [SIANG, MALAM, block(T(9, 30)), block(T(16))] },
-    saturday: { slots: [], fixed: [{ kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }], extras: [SIANG, MALAM, block(T(9, 30)), block(T(16))] },
-    sunday: {
-      slots: [],
-      fixed: [{ kind: 'baca', label: 'Baca ulang buku soal salah', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+    friday: { // 1 tryout malam (siang bebas untuk Jumatan)
+      slots: [MALAM],
+      fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
       extras: [SIANG, block(T(9, 30)), block(T(16))]
+    },
+    saturday: { // 2 tryout (siang dan malam)
+      slots: [SIANG, MALAM],
+      fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+      extras: [block(T(9, 30)), block(T(16))]
+    },
+    sunday: { // 1 tryout siang; malam 19.30 baca ulang buku soal salah
+      slots: [SIANG],
+      fixed: [{ kind: 'baca', label: 'Baca ulang buku soal salah', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+      extras: [block(T(9, 30)), block(T(16))]
     }
   };
   function templateFor(idx) { return idx < 4 ? TEMPLATES.weekday : idx === 4 ? TEMPLATES.friday : idx === 5 ? TEMPLATES.saturday : TEMPLATES.sunday; }
