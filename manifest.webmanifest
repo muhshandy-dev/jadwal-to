@@ -1,7 +1,7 @@
 {
   "name": "Jadwal Tryout SKD",
   "short_name": "Tryout SKD",
-  "description": "Pengatur jadwal 120 tryout SKD CPNS: checklist, skor, tren, dan catatan pelajaran harian.",
+  "description": "Pengatur jadwal 150 tryout SKD CPNS: checklist, skor, tren, dan catatan pelajaran harian.",
   "lang": "id",
   "dir": "ltr",
   "start_url": "./",

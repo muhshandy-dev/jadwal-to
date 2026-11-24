@@ -40,7 +40,7 @@ function seedState() {
   let k = 0;
   l.forEach(t => {
     if (t.week > 3) return;
-    if (['T015', 'T016'].indexOf(t.id) >= 0) return; // terlewat (Senin 7 Des, siang dan malam)
+    if (['T029', 'T030'].indexOf(t.id) >= 0) return; // terlewat (Senin 7 Des, siang dan malam)
     k++;
     S.setField(st, t.id, { done: true, reviewed: t.date < '2026-12-10', name: 'Paket Bimbel ' + String.fromCharCode(64 + (k % 26 || 26)) + ' ' + k, twk: twk[t.week] + (k % 2 ? 1 : -1), tiu: 78 + (k % 7), tkp: tkp[t.week] + (k % 3) });
   });
@@ -100,7 +100,7 @@ function seedState() {
     const cd1 = await page.textContent('#cd');
     const sec = s => { const p = s.split(':').map(Number); return p[0] * 3600 + p[1] * 60 + p[2]; };
     check('hitung mundur berkurang tiap detik', sec(cd0) - sec(cd1) >= 4 && sec(cd0) - sec(cd1) <= 7, [cd0, cd1]);
-    check('SKD H-76 dan progres 0/120', /H-76/.test(await page.textContent('.card')) && /0\/120/.test(await page.textContent('.card')));
+    check('SKD H-76 dan progres 0/150', /H-76/.test(await page.textContent('.card')) && /0\/150/.test(await page.textContent('.card')));
     await page.clock.runFor(81 * 60 * 1000); // lewat 20.50
     const nowTxt2 = await page.textContent('.ev.now');
     check('setelah 81 menit, sorotan pindah ke Pembahasan', /Pembahasan/.test(nowTxt2), nowTxt2);
@@ -113,7 +113,7 @@ function seedState() {
   {
     const { ctx, page } = await open('2026-11-24T11:30:00Z');
     await page.check('[data-done=T001]');
-    check('centang selesai di timeline menaikkan progres ke 1/120', /1\/120/.test(await page.textContent('.card')));
+    check('centang selesai di timeline menaikkan progres ke 1/150', /1\/150/.test(await page.textContent('.card')));
     await page.click('.ev.k-tryout [data-open=T001]');
     await page.fill('#f-name', 'Bimbel A – Paket 1');
     await page.fill('#f-twk', '70'); await page.fill('#f-tiu', '79'); await page.fill('#f-tkp', '170');
@@ -147,8 +147,8 @@ function seedState() {
     const { ctx, page } = await open('2026-12-21T04:00:00Z'); // Senin 21 Des 12.00 WITA
     check('peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)', /tryout terlewat/.test(await page.textContent('#view')));
     const thu = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-24').tryouts);
-    check('Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 1 tryout malam', thu.length === 2 && (await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts.length)) === 1, thu);
-    check('peringatan libur Natal sudah muncul sejak awal (1 tryout di hari libur)', /Hari Raya Natal, Jum 25 Des: 1 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
+    check('Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 2 tryout', thu.length === 2 && (await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts.length)) === 2, thu);
+    check('peringatan libur Natal sudah muncul sejak awal (2 tryout di hari libur)', /Hari Raya Natal, Jum 25 Des: 2 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
     await go(page, '#/tryout');
     check('minggu 5 menampilkan catatan Natal', /Natal jatuh Jumat 25 Des/.test(await page.textContent('details[data-w="5"]')));
     await page.click('details[data-w="5"] [data-open="' + thu[0] + '"]');
@@ -159,19 +159,17 @@ function seedState() {
     check('toast konfirmasi geser ke Jumat 25 Desember', /dijadwalkan Jumat, 25 Desember 2026/.test(await page.textContent('#toast')) || /Dijadwalkan Jumat, 25 Desember 2026/.test(await page.textContent('#move-msg')));
     await closeSheet(page);
     const inv = await page.evaluate(() => { const l = Sked.tryoutList(__app.state), c = {}; l.forEach(t => { c[t.week] = (c[t.week] || 0) + 1; }); return { n: l.length, same: JSON.stringify(Object.values(c)) === JSON.stringify(Sked.WEEK_COUNTS), moved: Sked.tryoutList(__app.state).filter(t => t.moved).length }; });
-    check('setelah geser: total tetap 120, jumlah tiap minggu tetap, 1 tryout bertanda digeser', inv.n === 120 && inv.same && inv.moved === 1, inv);
-    check('peringatan Natal: sekarang 2 tryout bisa digeser (1 asli + 1 geseran)', /Hari Raya Natal, Jum 25 Des: 2 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
-    await page.click('.warn:has-text("Natal") [data-open]');
-    await page.selectOption('#f-date', '2026-12-26');
-    await page.fill('#f-time', '10:00');
-    await page.click('[data-act=move]');
-    await closeSheet(page);
-    check('geser satu dari hari libur: peringatan tinggal 1 tryout', /Hari Raya Natal, Jum 25 Des: 1 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
-    await page.click('.warn:has-text("Natal") [data-open]');
-    await page.selectOption('#f-date', '2026-12-27');
-    await page.click('[data-act=move]');
-    await closeSheet(page);
-    check('peringatan Natal hilang setelah semua tryout digeser dari hari libur', (await page.locator('.warn:has-text("Natal")').count()) === 0);
+    check('setelah geser: total tetap 150, jumlah tiap minggu tetap, 1 tryout bertanda digeser', inv.n === 150 && inv.same && inv.moved === 1, inv);
+    check('peringatan Natal: sekarang 3 tryout bisa digeser (2 asli + 1 geseran)', /Hari Raya Natal, Jum 25 Des: 3 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
+    for (const [left, day] of [[2, '2026-12-26'], [1, '2026-12-27'], [0, '2026-12-27']]) {
+      await page.click('.warn:has-text("Natal") [data-open]');
+      await page.selectOption('#f-date', day);
+      if (left === 2) await page.fill('#f-time', '10:00');
+      await page.click('[data-act=move]');
+      await closeSheet(page);
+      const n = await page.locator('.warn:has-text("Natal")').count();
+      check('geser dari hari libur: sisa ' + left + ' tryout di peringatan Natal', left === 0 ? n === 0 : new RegExp('Jum 25 Des: ' + left + ' tryout bisa digeser').test(await page.textContent('.warn:has-text("Natal")')));
+    }
     check('minggu 5: tryout geseran bertanda ↔', /↔/.test(await page.textContent('details[data-w="5"]')));
     await page.click('details[data-w="5"] [data-open="' + thu[0] + '"]');
     await page.click('[data-act=unmove]');
@@ -302,12 +300,13 @@ function seedState() {
     const h1 = async () => { await page.waitForTimeout(120); return page.textContent('#view h1'); };
     const cur = async () => { await page.waitForTimeout(40); return page.$$eval('nav a[aria-current=page]', a => a.map(x => x.textContent.trim()).join()); };
     check('alamat lama #/hari-ini membuka tab Tryout', (await h1()) === 'Tryout' && (await cur()) === 'Tryout');
-    check('tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 120 baris tryout', (await page.locator('.timeline .ev').count()) > 1 && (await page.locator('details.week[data-w]').count()) === 11 && (await page.locator('li.item').count()) === 120 && (await page.locator('[role=progressbar]').count()) > 10);
+    check('tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 150 baris tryout', (await page.locator('.timeline .ev').count()) > 1 && (await page.locator('details.week[data-w]').count()) === 11 && (await page.locator('li.item').count()) === 150 && (await page.locator('[role=progressbar]').count()) > 10);
     check('hanya 2 tautan di navigasi bawah', (await page.locator('nav.bottom a').count()) === 2);
     await page.click('nav a[href="#/rekap"]');
     check('tab Rekap aktif: grafik skor', (await h1()) === 'Rekap' && (await cur()) === 'Rekap' && (await page.locator('[data-series]').count()) === 4);
     await page.click('[data-tab=pelajaran]');
     check('Rekap > Pelajaran: tombol tulis pelajaran hari ini, tanpa filter subtes', (await page.locator('[data-act=lesson-today]').count()) === 1 && (await page.locator('[data-notesub], [data-topicsel]').count()) === 0);
+    check('tidak ada teks "Soal salah"/"buku soal" di aplikasi (Rekap)', !/soal salah|buku soal/i.test(await page.textContent('body')));
     await page.click('a.gear');
     check('ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif', (await h1()) === 'Pengaturan' && (await cur()) === '' && (await page.locator('#skd').count()) === 1);
     await page.click('a.gear:has-text("Kembali")');
@@ -474,7 +473,7 @@ function seedState() {
     await ctx.setOffline(true);
     await page.reload(); await page.waitForSelector('#view h1', { timeout: 8000 });
     check('OFFLINE: halaman tetap termuat setelah reload', (await page.locator('.timeline .ev').count()) === 6);
-    check('OFFLINE: data lokal tetap ada (1/120)', /1\/120/.test(await page.textContent('.card')));
+    check('OFFLINE: data lokal tetap ada (1/150)', /1\/150/.test(await page.textContent('.card')));
     await go(page, '#/kalender');
     check('OFFLINE: kalender 11 minggu tampil', (await page.locator('details.week[data-w]').count()) === 11);
     await go(page, '#/catatan'); await page.click('[data-act=lesson-today]'); await page.fill('#l-text', 'Catatan saat offline'); await page.click('[data-act=lesson-save]');

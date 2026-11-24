@@ -1,5 +1,5 @@
 /* Service worker: pra-simpan cangkang aplikasi, lalu stale-while-revalidate. Semua path relatif. */
-var VERSION = 'tryout-skd-v6';
+var VERSION = 'tryout-skd-v7';
 var SHELL = ['./', 'index.html', 'styles.css', 'schedule.js', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -15,13 +15,17 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // Jaringan dulu (selalu versi terbaru bila online, tunggu maks 3 dtk), cadangan dari cache bila offline atau lambat.
   e.respondWith(caches.open(VERSION).then(function (cache) {
-    return cache.match(req, { ignoreSearch: true }).then(function (hit) {
-      var net = fetch(req).then(function (res) {
-        if (res && res.ok) cache.put(req, res.clone());
-        return res;
-      }).catch(function () { return hit || (req.mode === 'navigate' ? cache.match('index.html') : undefined); });
-      return hit || net;
+    var fromCache = function () { return cache.match(req, { ignoreSearch: true }).then(function (hit) { return hit || (req.mode === 'navigate' ? cache.match('index.html') : undefined); }); };
+    var net = fetch(req, { cache: 'no-cache' }).then(function (res) {
+      if (res && res.ok) cache.put(req, res.clone());
+      return res;
+    });
+    var timer = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 3000); });
+    return Promise.race([net.catch(function () { return null; }), timer]).then(function (res) {
+      if (res) return res;
+      return fromCache().then(function (hit) { return hit || net; });
     });
   }));
 });

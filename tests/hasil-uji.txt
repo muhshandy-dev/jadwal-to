@@ -1,37 +1,37 @@
 K1 jumlah dan periode
-  ok   total tepat 120, ID unik
+  ok   total tepat 150, ID unik
   ok   mulai Selasa 24 Nov 2026 (bukan Senin 23 Nov), selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb
-  ok   jumlah per hari: Sen-Kam 2, Jumat 1, Sabtu 2, Minggu 1 (12 per minggu penuh)
-  ok   minggu: 11 minggu (10, lalu 9 minggu × 12, lalu 2) = 120
+  ok   jumlah per hari: Sen-Kam 2, Jumat 2, Sabtu 3, Minggu 2 (15 per minggu penuh)
+  ok   minggu: 11 minggu (13, lalu 9 minggu × 15, lalu 2) = 150
   ok   awal minggu tepat: minggu 1 Sen 23 Nov, minggu 2 Sen 30 Nov, minggu 11 Sen 1 Feb 2027
-  ok   Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 1 tryout malam (boleh digeser)
-  ok   semua 120 tryout selesai sebelum SKD bawaan 8 Feb 2027; SKD tersisa 7 hari tenang
+  ok   Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 2 tryout (pagi dan malam, boleh digeser)
+  ok   semua 150 tryout selesai sebelum SKD bawaan 8 Feb 2027; SKD tersisa 7 hari tenang
 K2 templat harian
   ok   Selasa 24 Nov: siang 13.15 + malam 19.00
   ok   Senin-Kamis semuanya memakai templat yang sama
   ok   siang dulu, malam kemudian (nomor kecil = siang)
-  ok   Jumat: 1 tryout malam; Sabtu: siang + malam; Minggu: tryout siang, baca ulang 19.30-20.00, tidur
+  ok   Jumat: pagi 09.30 + malam 19.00; Sabtu: pagi, siang, malam; Minggu: pagi, siang, baca ulang 19.30, tidur
   ok   Senin 23 Nov (belum ada tryout): hanya tidur; Senin 1 Feb 2027 2 tryout, Selasa 2 Feb tanpa tryout
   ok   fase: sebelum, program, tenang, SKD, setelah
 K3 geser tryout
-  ok   geser ke hari lain di minggu yang sama (termasuk Jumat libur dan akhir pekan): berhasil, total 120 dan jumlah per minggu tetap
+  ok   geser ke hari lain di minggu yang sama (termasuk Jumat libur dan akhir pekan): berhasil, total 150 dan jumlah per minggu tetap
   ok   geser ke minggu lain ditolak (termasuk 31 Des ke 4 Jan)
   ok   tryout pertama (minggu 1 mulai Selasa) tidak bisa digeser ke minggu 2, tapi boleh ke Sen 23 Nov? (hari sebelum mulai, masih minggu 1)
-  ok   2000 geseran acak tidak pernah mengubah total 120 atau jumlah per minggu
+  ok   2000 geseran acak tidak pernah mengubah total 150 atau jumlah per minggu
   ok   tryout digeser ke hari penuh mendapat slot tambahan tanpa tabrakan; kembalikan ke jadwal awal
-  ok   Sabtu (2 tryout) diisi 2 tryout geseran: slot tambahan 09.30 dan 16.00, tanpa tabrakan
+  ok   Sabtu (3 tryout) diisi 1 tryout geseran: slot tambahan 16.00, tanpa tabrakan
   ok   jam mulai kustom, dan bentrok ditandai
-  ok   delapan tryout dipindah ke satu Sabtu (sudah 2): 4 slot berjam, 6 jam fleksibel
+  ok   delapan tryout dipindah ke satu Sabtu (sudah 3): 4 slot berjam, 7 jam fleksibel
 K6/K7 skor, ambang, progres
   ok   total otomatis dan lulus per subtes (default 65/80/166)
   ok   ambang bisa diubah
   ok   skor di luar batas ditolak (TWK maks 150, TIU 175, TKP 225)
-  ok   progres per minggu x/total minggu dan total x/120
+  ok   progres per minggu x/total minggu dan total x/150
   ok   hitung mundur SKD (default 8 Feb 2027)
 K8/K9 terlewat, libur, paket dobel, SKD
   ok   terlewat: belum selesai dan tanggal lewat; hilang bila digeser ke depan atau selesai
   ok   paket dobel: huruf besar, spasi, tanda baca diabaikan
-  ok   libur: tryout malam Jumat Natal terdeteksi; hilang bila digeser ke hari lain di minggu itu
+  ok   libur: 2 tryout di Jumat Natal terdeteksi; hilang bila semuanya digeser ke hari lain di minggu itu
   ok   tryout pada/setelah tanggal SKD terdeteksi (SKD bawaan 8 Feb: 0; SKD 1 Feb: 2)
 K10 tren dan skor mentok
   ok   rata-rata per minggu
@@ -56,11 +56,11 @@ K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Ang
   ok    timeline Selasa: 6 kegiatan (tryout siang, bahas, tryout malam, bahas, santai, tidur)
   ok    hitung mundur ke kegiatan berikutnya (Pembahasan 20.50), kira-kira 01:20:00
   ok    hitung mundur berkurang tiap detik
-  ok    SKD H-76 dan progres 0/120
+  ok    SKD H-76 dan progres 0/150
   ok    setelah 81 menit, sorotan pindah ke Pembahasan
   ok    tanpa galat konsol
 K5/K14/K9 checklist, skor, persistensi, paket dobel
-  ok    centang selesai di timeline menaikkan progres ke 1/120
+  ok    centang selesai di timeline menaikkan progres ke 1/150
   ok    total dihitung otomatis 319
   ok    lulus/tidak per subtes: TWK ✓, TIU ✗, TKP ✓
   ok    skor di luar batas ditolak dengan pesan
@@ -71,15 +71,16 @@ K5/K14/K9 checklist, skor, persistensi, paket dobel
   ok    peringatan paket dobel di halaman Skor
 K3/K8 geser tryout (termasuk ke Jumat Natal) dan peringatan terlewat
   ok    peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)
-  ok    Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 1 tryout malam
-  ok    peringatan libur Natal sudah muncul sejak awal (1 tryout di hari libur)
+  ok    Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 2 tryout
+  ok    peringatan libur Natal sudah muncul sejak awal (2 tryout di hari libur)
   ok    minggu 5 menampilkan catatan Natal
   ok    pilihan geser hanya 7 hari di minggu yang sama (21–27 Des)
   ok    toast konfirmasi geser ke Jumat 25 Desember
-  ok    setelah geser: total tetap 120, jumlah tiap minggu tetap, 1 tryout bertanda digeser
-  ok    peringatan Natal: sekarang 2 tryout bisa digeser (1 asli + 1 geseran)
-  ok    geser satu dari hari libur: peringatan tinggal 1 tryout
-  ok    peringatan Natal hilang setelah semua tryout digeser dari hari libur
+  ok    setelah geser: total tetap 150, jumlah tiap minggu tetap, 1 tryout bertanda digeser
+  ok    peringatan Natal: sekarang 3 tryout bisa digeser (2 asli + 1 geseran)
+  ok    geser dari hari libur: sisa 2 tryout di peringatan Natal
+  ok    geser dari hari libur: sisa 1 tryout di peringatan Natal
+  ok    geser dari hari libur: sisa 0 tryout di peringatan Natal
   ok    minggu 5: tryout geseran bertanda ↔
   ok    kembalikan ke jadwal awal (Kamis 24 Des)
   ok    Tahun Baru: Kamis 31 Des bisa digeser ke Jumat 1 Jan, tidak ke Senin 4 Jan (minggu lain)
@@ -119,10 +120,11 @@ K13 pengaturan: SKD, ambang, tema
   ok    pengaturan bertahan setelah reload
 Navigasi sederhana: 2 tab + ikon pengaturan
   ok    alamat lama #/hari-ini membuka tab Tryout
-  ok    tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 120 baris tryout
+  ok    tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 150 baris tryout
   ok    hanya 2 tautan di navigasi bawah
   ok    tab Rekap aktif: grafik skor
   ok    Rekap > Pelajaran: tombol tulis pelajaran hari ini, tanpa filter subtes
+  ok    tidak ada teks "Soal salah"/"buku soal" di aplikasi (Rekap)
   ok    ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif
   ok    tombol Kembali ke Tryout
   ok    gerigi berada di pojok kanan atas
@@ -186,7 +188,7 @@ K17 PWA: manifest, service worker, offline
   ok    halaman dikendalikan service worker setelah muat ulang
   ok    cangkang aplikasi ter-cache
   ok    OFFLINE: halaman tetap termuat setelah reload
-  ok    OFFLINE: data lokal tetap ada (1/120)
+  ok    OFFLINE: data lokal tetap ada (1/150)
   ok    OFFLINE: kalender 11 minggu tampil
   ok    OFFLINE: menulis pelajaran berfungsi
   ok    OFFLINE: berkas aplikasi dilayani dari cache
@@ -197,4 +199,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-132 pemeriksaan lulus, 0 gagal
+134 pemeriksaan lulus, 0 gagal
