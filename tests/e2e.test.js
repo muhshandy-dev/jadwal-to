@@ -147,8 +147,8 @@ function seedState() {
     const { ctx, page } = await open('2026-12-21T04:00:00Z'); // Senin 21 Des 12.00 WITA
     check('peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)', /tryout terlewat/.test(await page.textContent('#view')));
     const thu = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-24').tryouts);
-    check('Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 2 tryout', thu.length === 2 && (await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts.length)) === 2, thu);
-    check('peringatan libur Natal sudah muncul sejak awal (2 tryout di hari libur)', /Hari Raya Natal, Jum 25 Des: 2 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
+    check('Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 1 tryout malam', thu.length === 2 && (await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-25').tryouts.length)) === 1, thu);
+    check('peringatan libur Natal sudah muncul sejak awal (1 tryout di hari libur)', /Hari Raya Natal, Jum 25 Des: 1 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
     await go(page, '#/tryout');
     check('minggu 5 menampilkan catatan Natal', /Natal jatuh Jumat 25 Des/.test(await page.textContent('details[data-w="5"]')));
     await page.click('details[data-w="5"] [data-open="' + thu[0] + '"]');
@@ -160,11 +160,11 @@ function seedState() {
     await closeSheet(page);
     const inv = await page.evaluate(() => { const l = Sked.tryoutList(__app.state), c = {}; l.forEach(t => { c[t.week] = (c[t.week] || 0) + 1; }); return { n: l.length, same: JSON.stringify(Object.values(c)) === JSON.stringify(Sked.WEEK_COUNTS), moved: Sked.tryoutList(__app.state).filter(t => t.moved).length }; });
     check('setelah geser: total tetap 150, jumlah tiap minggu tetap, 1 tryout bertanda digeser', inv.n === 150 && inv.same && inv.moved === 1, inv);
-    check('peringatan Natal: sekarang 3 tryout bisa digeser (2 asli + 1 geseran)', /Hari Raya Natal, Jum 25 Des: 3 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
-    for (const [left, day] of [[2, '2026-12-26'], [1, '2026-12-27'], [0, '2026-12-27']]) {
+    check('peringatan Natal: sekarang 2 tryout bisa digeser (1 asli + 1 geseran)', /Hari Raya Natal, Jum 25 Des: 2 tryout bisa digeser/.test(await page.textContent('.warn:has-text("Natal")')));
+    for (const [left, day] of [[1, '2026-12-26'], [0, '2026-12-27']]) {
       await page.click('.warn:has-text("Natal") [data-open]');
       await page.selectOption('#f-date', day);
-      if (left === 2) await page.fill('#f-time', '10:00');
+      if (left === 1) await page.fill('#f-time', '14:00');
       await page.click('[data-act=move]');
       await closeSheet(page);
       const n = await page.locator('.warn:has-text("Natal")').count();
@@ -232,11 +232,11 @@ function seedState() {
   }
 
   // ---------------------------------------------------------------- K11 catatan pelajaran, K20 XSS
-  console.log('K11/K20 catatan pelajaran harian, pengingat Minggu 19.30, XSS');
+  console.log('K11/K20 catatan pelajaran harian, pengingat Minggu 22.00, XSS');
   {
-    const { ctx, page } = await open('2026-11-29T11:30:00Z', { hash: '#/hari-ini' }); // Minggu 19.30 WITA
+    const { ctx, page } = await open('2026-11-29T14:15:00Z', { hash: '#/hari-ini' }); // Minggu 22.15 WITA
     const nowTxt = await page.textContent('.ev.now');
-    check('Minggu 19.30: pengingat Baca ulang pelajaran minggu ini sedang berjalan', /Baca ulang pelajaran minggu ini/.test(nowTxt) && /Buka catatan/.test(nowTxt), nowTxt);
+    check('Minggu 22.15: pengingat Baca ulang pelajaran minggu ini sedang berjalan', /Baca ulang pelajaran minggu ini/.test(nowTxt) && /Buka catatan/.test(nowTxt), nowTxt);
     check('tab Tryout punya kartu Pelajaran hari ini (belum ditulis)', /Pelajaran hari ini/.test(await page.textContent('#view')) && /Belum ditulis/.test(await page.textContent('#view')));
     await page.click('[data-act=lesson-today]');
     check('editor pelajaran: hanya satu kolom teks (tanpa subtes/topik)', (await page.locator('#l-text').count()) === 1 && (await page.locator('#n-sub, #n-topic').count()) === 0);
@@ -296,7 +296,7 @@ function seedState() {
   // ---------------------------------------------------------------- Navigasi 2 tab
   console.log('Navigasi sederhana: 2 tab + ikon pengaturan');
   {
-    const { ctx, page } = await open('2026-11-29T11:30:00Z', { hash: '#/hari-ini' }); // alias lama, Minggu 19.30
+    const { ctx, page } = await open('2026-11-29T14:15:00Z', { hash: '#/hari-ini' }); // alias lama, Minggu 22.15
     const h1 = async () => { await page.waitForTimeout(120); return page.textContent('#view h1'); };
     const cur = async () => { await page.waitForTimeout(40); return page.$$eval('nav a[aria-current=page]', a => a.map(x => x.textContent.trim()).join()); };
     check('alamat lama #/hari-ini membuka tab Tryout', (await h1()) === 'Tryout' && (await cur()) === 'Tryout');
@@ -314,7 +314,7 @@ function seedState() {
     const g = await page.$eval('a.gear', e => { const r = e.getBoundingClientRect(); return [Math.round(r.right), innerWidth, Math.round(r.top)]; });
     check('gerigi berada di pojok kanan atas', g[0] >= g[1] - 24 && g[2] < 40, g);
     await page.locator('.ev.now [data-act=goto-lessons]').click();
-    check('pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Pelajaran', (await h1()) === 'Rekap' && (await page.locator('[data-act=lesson-today]').count()) === 1);
+    check('pengingat Minggu 22.00: tombol Buka catatan langsung ke Rekap > Pelajaran', (await h1()) === 'Rekap' && (await page.locator('[data-act=lesson-today]').count()) === 1);
     await page.evaluate(() => { location.hash = '#/catatan'; }); await page.waitForTimeout(80);
     check('alamat lama #/catatan membuka Rekap > Pelajaran', (await h1()) === 'Rekap' && (await page.locator('[data-act=lesson-today]').count()) === 1);
     await ctx.close();
@@ -399,6 +399,27 @@ function seedState() {
     const bc = await audit();
     check(scheme + ': dialog konfirmasi polos, termasuk ::backdrop', bc.length === 0, bc);
     await shot(page, '17-dialog-konfirmasi-' + scheme + '-375');
+    await ctx.close();
+  }
+
+  // ---------------------------------------------------------------- Tidak ada teks "undefined" / "null" / "NaN"
+  console.log('Tidak ada undefined/null/NaN di tampilan');
+  {
+    const { ctx, page, errors } = await open('2026-12-12T02:00:00Z', { seed: true });
+    const bad = async () => page.evaluate(() => { const m = document.body.innerText.match(/undefined|\bnull\b|\bNaN\b|\[object/gi); return m ? m.join() : ''; });
+    for (const h of ['#/tryout', '#/rekap', '#/rekap-salah', '#/pengaturan']) { await go(page, h); check('tanpa undefined/null/NaN di ' + h, (await bad()) === '', await bad()); }
+    await go(page, '#/tryout');
+    const rows = await page.$$eval('li.item .l1', e => e.map(x => x.textContent));
+    check('150 baris tryout, tiap baris punya sesi: siang 13.15 / siang 2 16.00 / malam 19.00 atau tanda geser', rows.length === 150 && rows.every(r => /(siang 13\.15|siang 2 16\.00|malam 19\.00|↔)/.test(r)), rows.filter(r => !/(siang 13\.15|siang 2 16\.00|malam 19\.00|↔)/.test(r)).slice(0, 3));
+    const sat = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-19').tryouts);
+    const sun = await page.evaluate(() => Sked.buildDay(__app.state, '2026-12-20').tryouts);
+    check('Sabtu 19 Des dan Minggu 20 Des masing-masing 3 tryout', sat.length === 3 && sun.length === 3, [sat, sun]);
+    for (const id of sat.concat(sun)) { await page.click('[data-open=' + id + ']'); const b = await bad(); await closeSheet(page); if (b) check('sheet ' + id + ' tanpa undefined', false, b); }
+    check('sheet 6 tryout Sabtu-Minggu tanpa undefined/null/NaN', true);
+    await page.evaluate(() => { location.hash = '#/tryout'; }); await page.waitForTimeout(80);
+    const tl = await page.$$eval('.timeline .ev', e => e.map(x => x.textContent));
+    check('timeline hari ini tanpa undefined', !/undefined|NaN|null/.test(tl.join(' ')), tl);
+    check('tanpa galat konsol', errors.length === 0, errors);
     await ctx.close();
   }
 

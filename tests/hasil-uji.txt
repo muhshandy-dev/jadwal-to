@@ -1,16 +1,17 @@
 K1 jumlah dan periode
   ok   total tepat 150, ID unik
   ok   mulai Selasa 24 Nov 2026 (bukan Senin 23 Nov), selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb
-  ok   jumlah per hari: Sen-Kam 2, Jumat 2, Sabtu 3, Minggu 2 (15 per minggu penuh)
+  ok   jumlah per hari: Sen-Kam 2, Jumat 1, Sabtu 3, Minggu 3 (15 per minggu penuh)
   ok   minggu: 11 minggu (13, lalu 9 minggu × 15, lalu 2) = 150
   ok   awal minggu tepat: minggu 1 Sen 23 Nov, minggu 2 Sen 30 Nov, minggu 11 Sen 1 Feb 2027
-  ok   Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 2 tryout (pagi dan malam, boleh digeser)
+  ok   Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 1 tryout malam (boleh digeser)
   ok   semua 150 tryout selesai sebelum SKD bawaan 8 Feb 2027; SKD tersisa 7 hari tenang
 K2 templat harian
   ok   Selasa 24 Nov: siang 13.15 + malam 19.00
   ok   Senin-Kamis semuanya memakai templat yang sama
   ok   siang dulu, malam kemudian (nomor kecil = siang)
-  ok   Jumat: pagi 09.30 + malam 19.00; Sabtu: pagi, siang, malam; Minggu: pagi, siang, baca ulang 19.30, tidur
+  ok   Jumat: 1 malam; Sabtu: siang 13.15, siang 2 16.00, malam 19.00; Minggu sama + baca ulang 22.00
+  ok   tidak ada "undefined"/"null"/"NaN" di label jadwal: setiap tryout punya sesi, tidak ada tabrakan jam, tanpa jam pagi
   ok   Senin 23 Nov (belum ada tryout): hanya tidur; Senin 1 Feb 2027 2 tryout, Selasa 2 Feb tanpa tryout
   ok   fase: sebelum, program, tenang, SKD, setelah
 K3 geser tryout
@@ -19,9 +20,9 @@ K3 geser tryout
   ok   tryout pertama (minggu 1 mulai Selasa) tidak bisa digeser ke minggu 2, tapi boleh ke Sen 23 Nov? (hari sebelum mulai, masih minggu 1)
   ok   2000 geseran acak tidak pernah mengubah total 150 atau jumlah per minggu
   ok   tryout digeser ke hari penuh mendapat slot tambahan tanpa tabrakan; kembalikan ke jadwal awal
-  ok   Sabtu (3 tryout) diisi 1 tryout geseran: slot tambahan 16.00, tanpa tabrakan
+  ok   Jumat (1 tryout) diisi 2 tryout geseran: slot siang 13.15 dan siang 2 16.00, tanpa tabrakan
   ok   jam mulai kustom, dan bentrok ditandai
-  ok   delapan tryout dipindah ke satu Sabtu (sudah 3): 4 slot berjam, 7 jam fleksibel
+  ok   delapan tryout dipindah ke satu Sabtu (sudah 3): 3 slot berjam, 8 jam fleksibel
 K6/K7 skor, ambang, progres
   ok   total otomatis dan lulus per subtes (default 65/80/166)
   ok   ambang bisa diubah
@@ -31,7 +32,7 @@ K6/K7 skor, ambang, progres
 K8/K9 terlewat, libur, paket dobel, SKD
   ok   terlewat: belum selesai dan tanggal lewat; hilang bila digeser ke depan atau selesai
   ok   paket dobel: huruf besar, spasi, tanda baca diabaikan
-  ok   libur: 2 tryout di Jumat Natal terdeteksi; hilang bila semuanya digeser ke hari lain di minggu itu
+  ok   libur: tryout malam Jumat Natal terdeteksi; hilang bila digeser ke hari lain di minggu itu
   ok   tryout pada/setelah tanggal SKD terdeteksi (SKD bawaan 8 Feb: 0; SKD 1 Feb: 2)
 K10 tren dan skor mentok
   ok   rata-rata per minggu
@@ -49,7 +50,7 @@ K4 waktu WITA dan hitung mundur
   ok   kegiatan berjalan dan berikutnya (Selasa 24 Nov 19.30 WITA)
   ok   siang: jeda, lewat tengah malam, sebelum program, dan setelah program
 
-41 tes lulus
+42 tes lulus
 K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
   ok    tanggal ditampilkan dalam WITA
   ok    kegiatan berjalan disorot: Tryout malam 19.00–20.40
@@ -71,14 +72,13 @@ K5/K14/K9 checklist, skor, persistensi, paket dobel
   ok    peringatan paket dobel di halaman Skor
 K3/K8 geser tryout (termasuk ke Jumat Natal) dan peringatan terlewat
   ok    peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)
-  ok    Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 2 tryout
-  ok    peringatan libur Natal sudah muncul sejak awal (2 tryout di hari libur)
+  ok    Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 1 tryout malam
+  ok    peringatan libur Natal sudah muncul sejak awal (1 tryout di hari libur)
   ok    minggu 5 menampilkan catatan Natal
   ok    pilihan geser hanya 7 hari di minggu yang sama (21–27 Des)
   ok    toast konfirmasi geser ke Jumat 25 Desember
   ok    setelah geser: total tetap 150, jumlah tiap minggu tetap, 1 tryout bertanda digeser
-  ok    peringatan Natal: sekarang 3 tryout bisa digeser (2 asli + 1 geseran)
-  ok    geser dari hari libur: sisa 2 tryout di peringatan Natal
+  ok    peringatan Natal: sekarang 2 tryout bisa digeser (1 asli + 1 geseran)
   ok    geser dari hari libur: sisa 1 tryout di peringatan Natal
   ok    geser dari hari libur: sisa 0 tryout di peringatan Natal
   ok    minggu 5: tryout geseran bertanda ↔
@@ -98,8 +98,8 @@ K10/K12/K15 tren, kalender, ekspor dan impor JSON
   ok    reset dengan konfirmasi menghapus semua data
   ok    dialog impor menyebut jumlah data
   ok    impor memulihkan data persis seperti sebelum reset
-K11/K20 catatan pelajaran harian, pengingat Minggu 19.30, XSS
-  ok    Minggu 19.30: pengingat Baca ulang pelajaran minggu ini sedang berjalan
+K11/K20 catatan pelajaran harian, pengingat Minggu 22.00, XSS
+  ok    Minggu 22.15: pengingat Baca ulang pelajaran minggu ini sedang berjalan
   ok    tab Tryout punya kartu Pelajaran hari ini (belum ditulis)
   ok    editor pelajaran: hanya satu kolom teks (tanpa subtes/topik)
   ok    simpan kosong ditolak dan tidak menyimpan apa pun
@@ -128,7 +128,7 @@ Navigasi sederhana: 2 tab + ikon pengaturan
   ok    ikon gerigi di pojok kanan atas membuka Pengaturan, tanpa tab aktif
   ok    tombol Kembali ke Tryout
   ok    gerigi berada di pojok kanan atas
-  ok    pengingat Minggu 19.30: tombol Buka catatan langsung ke Rekap > Pelajaran
+  ok    pengingat Minggu 22.00: tombol Buka catatan langsung ke Rekap > Pelajaran
   ok    alamat lama #/catatan membuka Rekap > Pelajaran
 Tema warna gaya GitHub (solid, tanpa transparansi)
   ok    CSS tanpa rgba/hsla, opacity, gradient, blur, backdrop-filter
@@ -155,6 +155,16 @@ Warna polos di semua halaman dan dialog (gelap dan terang)
   ok    light: peringatan dan kartu "sedang berjalan" memakai warna permukaan netral (bukan tint merah/kuning/biru)
   ok    light: dialog detail tryout polos, termasuk ::backdrop
   ok    light: dialog konfirmasi polos, termasuk ::backdrop
+Tidak ada undefined/null/NaN di tampilan
+  ok    tanpa undefined/null/NaN di #/tryout
+  ok    tanpa undefined/null/NaN di #/rekap
+  ok    tanpa undefined/null/NaN di #/rekap-salah
+  ok    tanpa undefined/null/NaN di #/pengaturan
+  ok    150 baris tryout, tiap baris punya sesi: siang 13.15 / siang 2 16.00 / malam 19.00 atau tanda geser
+  ok    Sabtu 19 Des dan Minggu 20 Des masing-masing 3 tryout
+  ok    sheet 6 tryout Sabtu-Minggu tanpa undefined/null/NaN
+  ok    timeline hari ini tanpa undefined
+  ok    tanpa galat konsol
 K16 layout 375 px
   ok    #/tryout: tanpa scroll horizontal
   ok    #/tryout: semua tombol/input minimal 44 px tinggi
@@ -199,4 +209,4 @@ K19 subpath (GitHub Pages: /nama-repo/)
   ok    offline di subpath berfungsi
   ok    tanpa galat konsol di subpath
 
-134 pemeriksaan lulus, 0 gagal
+142 pemeriksaan lulus, 0 gagal

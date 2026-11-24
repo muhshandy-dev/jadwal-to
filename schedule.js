@@ -7,13 +7,13 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  // Revisi 2026-11-24 (150 tryout): mulai Selasa 24 Nov 2026. Senin-Kamis 2 tryout per hari (siang dan malam),
-  // Jumat 2 (pagi dan malam), Sabtu 3 (pagi, siang, malam), Minggu 2 (pagi dan siang) = 15 per minggu.
+  // Revisi 2026-11-24 (150 tryout): mulai Selasa 24 Nov 2026. Hanya sesi siang (13.15), siang 2 (16.00), malam (19.00).
+  // Senin-Kamis 2 (siang, malam), Jumat 1 (malam), Sabtu 3 dan Minggu 3 (siang, siang 2, malam) = 15 per minggu.
   // 150 tryout selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb 2027. Minggu 1 dihitung dari Senin 23 Nov.
   var START_DATE = '2026-11-23'; // Senin awal minggu 1
   var FIRST_DATE = '2026-11-24'; // tryout pertama
   var TOTAL = 150;
-  var PER_DAY = [2, 2, 2, 2, 2, 3, 2]; // Senin..Minggu
+  var PER_DAY = [2, 2, 2, 2, 1, 3, 3]; // Senin..Minggu
   var DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   var MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   var HOLIDAYS = { '2026-12-25': 'Hari Raya Natal', '2027-01-01': 'Tahun Baru 2027' };
@@ -67,29 +67,29 @@
   function T(h, m) { return h * 60 + (m || 0); }
   function block(s) { return { to: [s, s + 100], bahas: [s + 105, s + 150] }; }
   function slot(name, a, b, c, d) { return { name: name, to: [a, b], bahas: [c, d] }; }
-  var PAGI = slot('pagi', T(9, 30), T(11, 10), T(11, 15), T(12));
   var SIANG = slot('siang', T(13, 15), T(14, 55), T(15), T(15, 45));
+  var SIANG2 = slot('siang 2', T(16), T(17, 40), T(17, 45), T(18, 30));
   var MALAM = slot('malam', T(19), T(20, 40), T(20, 50), T(21, 50));
   var TEMPLATES = {
     weekday: { // Senin-Kamis: 2 tryout (siang dan malam)
       slots: [SIANG, MALAM],
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(9, 30)), block(T(16))]
+      extras: [SIANG2]
     },
-    friday: { // 2 tryout: pagi dan malam (siang bebas untuk Jumatan)
-      slots: [PAGI, MALAM],
+    friday: { // 1 tryout malam (siang bebas untuk Jumatan)
+      slots: [MALAM],
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [SIANG, block(T(16))]
+      extras: [SIANG, SIANG2]
     },
-    saturday: { // 3 tryout: pagi, siang, malam
-      slots: [PAGI, SIANG, MALAM],
+    saturday: { // 3 tryout: siang, siang 2, malam
+      slots: [SIANG, SIANG2, MALAM],
       fixed: [{ kind: 'santai', label: 'Santai / istirahat', start: T(21, 50), end: T(23) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(16))]
+      extras: []
     },
-    sunday: { // 2 tryout: pagi dan siang; malam 19.30 baca ulang pelajaran minggu ini
-      slots: [PAGI, SIANG],
-      fixed: [{ kind: 'baca', label: 'Baca ulang pelajaran minggu ini', start: T(19, 30), end: T(20) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
-      extras: [block(T(16))]
+    sunday: { // 3 tryout: siang, siang 2, malam; baca ulang pelajaran minggu ini setelah pembahasan malam
+      slots: [SIANG, SIANG2, MALAM],
+      fixed: [{ kind: 'baca', label: 'Baca ulang pelajaran minggu ini', start: T(22), end: T(22, 30) }, { kind: 'tidur', label: 'Tidur', start: T(23), end: T(24) }],
+      extras: []
     }
   };
   function templateFor(idx) { return idx < 4 ? TEMPLATES.weekday : idx === 4 ? TEMPLATES.friday : idx === 5 ? TEMPLATES.saturday : TEMPLATES.sunday; }
@@ -152,13 +152,18 @@
   }
 
   /* ---------- Daftar tryout ---------- */
+  // Sesi jadwal awal, mis. "siang 13.15"; selalu terisi (tidak pernah undefined).
+  function baseSession(b) {
+    var tpl = templateFor(b.dayIdx), sl = tpl.slots[b.slot] || tpl.extras[b.slot - tpl.slots.length];
+    return sl && sl.name ? sl.name + ' ' + fmtTime(sl.to[0]) : 'sesi ' + (b.slot + 1);
+  }
   function tryoutList(state) {
     return BASE.map(function (b) {
       var u = state.tryouts[b.id] || {};
       var date = u.date || b.date;
       var start = typeof u.start === 'number' ? u.start : null;
       return {
-        id: b.id, n: b.n, week: b.week, slot: b.slot, baseDate: b.date, date: date, start: start,
+        id: b.id, n: b.n, week: b.week, slot: b.slot, session: baseSession(b), baseDate: b.date, date: date, start: start,
         moved: date !== b.date || start !== null,
         done: !!u.done, reviewed: !!u.reviewed, name: u.name || '',
         twk: num(u.twk), tiu: num(u.tiu), tkp: num(u.tkp)

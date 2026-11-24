@@ -152,7 +152,7 @@
   var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Setiap hari tulis satu catatan singkat: pelajaran yang didapat hari ini. Catatan dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang catatan pelajaran dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap ' + S.TOTAL + '.'];
   function rowHtml(t, d0, thr) {
     var tot = S.totalScore(t), st = S.statusOf(t, d0);
-    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : ' · ' + ['siang', 'malam'][t.slot]) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
+    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : ' · ' + esc(t.session)) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
   }
   function weeksBlock() {
     var d0 = today(), cw = S.weekOf(d0), list = S.tryoutList(state), ws = S.weekStats(state), thr = state.settings.thr;
@@ -166,7 +166,7 @@
       if (WEEK_NOTES[w]) h += '<p class="note">' + esc(WEEK_NOTES[w]) + '</p>';
       h += '<ul class="list">' + wl.map(function (t) { return rowHtml(t, d0, thr); }).join('') + '</ul></details>';
     }
-    h += '<p class="hint">Jadwal: Senin–Kamis 2 tryout per hari (siang 13.15 dan malam 19.00), Jumat 2 (pagi 09.30 dan malam), Sabtu 3 (pagi, siang, malam), Minggu 2 (pagi dan siang); tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
+    h += '<p class="hint">Jadwal: Senin–Kamis 2 tryout per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam), Sabtu dan Minggu 3 (siang 13.15, siang 2 16.00, malam 19.00); tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
     return h;
   }
   function pageHead(title, sub, noGear) {
@@ -226,7 +226,7 @@
   /* ---------- Pelajaran harian ---------- */
   function lessonsBlock() {
     var dates = S.lessonDates(state), t0 = today();
-    var h = '<p class="hint">Satu catatan singkat per hari: apa yang dipelajari hari ini. Dibaca ulang tiap Minggu pukul 19.30.</p>';
+    var h = '<p class="hint">Satu catatan singkat per hari: apa yang dipelajari hari ini. Dibaca ulang tiap Minggu pukul 22.00.</p>';
     h += '<button class="btn primary block" data-act="lesson-today">' + (state.lessons[t0] ? 'Ubah pelajaran hari ini' : '+ Tulis pelajaran hari ini') + '</button>';
     if (!dates.length) h += '<div class="card empty"><p>Belum ada catatan. Tulis satu atau dua kalimat tentang pelajaran yang didapat hari ini, misalnya “TWK: bedakan Pancasila sebagai dasar negara dan pandangan hidup”.</p></div>';
     h += '<ul class="notes">' + dates.map(function (d) {
