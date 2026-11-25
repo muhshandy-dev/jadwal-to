@@ -1,10 +1,10 @@
 # Jadwal Tryout SKD
 
-Aplikasi web statis (HTML, CSS, JavaScript murni) untuk mengatur 150 tryout SKD CPNS.
-**Jadwal (revisi 24 November 2026):** mulai Selasa 24 November 2026, **15 tryout per minggu**: Senin–Kamis 2 per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam 19.00), Sabtu 3 dan Minggu 3 (siang 13.15, siang 2 16.00, malam 19.00). Tidak ada sesi pagi.
-Hasilnya 150 tryout selesai **Senin 1 Februari 2027** (11 minggu: 13 tryout di minggu 1, 15 per minggu di minggu 2–10, 2 di minggu 11), sebelum SKD bawaan 8 Februari 2027.
-Minggu pukul 22.00 (setelah pembahasan malam) ada pengingat baca ulang catatan pelajaran. Jumat siang dikosongkan untuk Jumatan. Jumat 25 Des (Natal) dan 1 Jan (Tahun Baru) tetap punya 1 tryout malam; aplikasi memberi peringatan dan Anda bisa menggesernya ke hari lain di minggu itu.
-Setelah 1 Februari tidak ada tryout lagi: 6 hari tenang sebelum SKD (baca ulang catatan pelajaran dan jaga tidur). Bila tanggal SKD resmi lebih awal, aplikasi menampilkan peringatan sampai Anda mengubah tanggal SKD di Pengaturan. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
+Aplikasi web statis (HTML, CSS, JavaScript murni) untuk mengatur 151 tryout SKD CPNS.
+**Jadwal (revisi 25 November 2026):** mulai **Senin 30 November 2026** (minggu ini belajar dulu, belum ada tryout). Hari biasa 15 tryout per minggu: Senin–Kamis 2 per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam 19.00), Sabtu 3 dan Minggu 3 (siang 13.15, siang 2 16.00, malam 19.00).
+**Hari libur 4 tryout** (pagi 09.30 ditambah tiga sesi di atas): Kamis 24 Des (cuti bersama Natal), Jumat 25 Des (Natal), Sabtu–Minggu 26–27 Des (libur panjang), Jumat 1 Jan 2027 (Tahun Baru), Sabtu–Minggu 2–3 Jan (libur panjang), dan Selasa 5 Jan (Isra Mikraj). Tanggal libur diambil dari laporan berita tentang SKB 3 Menteri 2026 dan 2027; teks resmi belum bisa dibuka langsung, jadi cek ulang di Kemenko PMK/Setneg.
+Hasilnya **151 tryout** selesai **Senin 1 Februari 2027** (10 minggu: 15, 15, 15, 22, 20, 17, 15, 15, 15, lalu 2 di minggu penutup). Minggu pukul 22.00 (setelah pembahasan malam) ada pengingat baca ulang catatan pelajaran. Jumat siang dikosongkan untuk Jumatan.
+Setelah 1 Februari tidak ada tryout: 2–7 Feb tenang sebelum SKD bawaan 8 Februari 2027 (5 Feb cuti bersama Imlek, 6 Feb Imlek). Bila tanggal SKD resmi lebih awal, aplikasi menampilkan peringatan sampai Anda mengubah tanggal SKD di Pengaturan. Mobile-first, bisa dipasang di layar utama (PWA) dan jalan offline.
 Tanpa backend, tanpa login. Semua data disimpan di `localStorage` perangkat; cadangan lewat Ekspor/Impor JSON.
 
 Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
@@ -13,7 +13,7 @@ Zona waktu tetap WITA (Asia/Makassar, UTC+8), apa pun zona waktu perangkat.
 
 Navigasi sederhana: **2 tab** di bawah (Tryout, Rekap) dan ikon gerigi di pojok kanan atas untuk Pengaturan.
 
-- **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/150 dan per minggu), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 11 minggu yang bisa dibuka. Tiap minggu berisi tryout-nya dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (Natal Jumat 25 Des 2026 dan Tahun Baru Jumat 1 Jan 2027 sudah ditandai libur).
+- **Tab Tryout** (satu halaman): ringkasan (H-minus SKD, progres x/151 dan per minggu), peringatan ringkas, kegiatan hari ini (timeline, sorotan kegiatan berjalan, hitung mundur), lalu 10 minggu yang bisa dibuka. Tiap minggu berisi tryout-nya dengan kotak centang selesai; ketuk untuk mengisi nama paket, skor TWK/TIU/TKP (total otomatis, lulus/belum per subtes), status pembahasan, dan menggeser tryout ke hari lain di minggu yang sama (hari libur ditandai "libur").
 - **Tab Rekap**: *Skor* (grafik tren TWK/TIU/TKP/total dengan garis ambang, rata-rata per minggu, peringatan skor mentok) dan *Pelajaran* (satu catatan singkat per hari: pelajaran yang didapat hari ini, ditulis dari kartu "Pelajaran hari ini" di tab Tryout atau dari tab ini; daftar terbaru dulu; pengingat baca ulang Minggu 22.00). Fitur buku soal salah per soal sudah dihapus; data lama dari fitur itu diabaikan saat dimuat/impor.
 - **Pengaturan** (ikon gerigi): tanggal SKD (default 8 Feb 2027), ambang lulus (default TWK 65, TIU 80, TKP 166), tema gaya GitHub (gelap #0d1117, terang #ffffff, atau otomatis mengikuti sistem; semua warna solid tanpa transparansi), notifikasi, ekspor/impor, reset dengan konfirmasi, dan 7 aturan tetap.
 - Alamat lama (`#/hari-ini`, `#/kalender`, `#/skor`, `#/catatan`) masih diarahkan ke tab yang sesuai.
@@ -75,8 +75,8 @@ Service worker memakai strategi *jaringan-dulu*: bila online, aplikasi selalu me
 
 ## Aturan perilaku yang perlu diketahui
 
-- **Geser** hanya ke hari lain di minggu yang sama, supaya jumlah tryout tiap minggu tetap dan total tetap 150. Tryout dianggap *terlewat* bila belum selesai dan tanggalnya sudah lewat (WITA); peringatannya hilang bila digeser ke hari ini atau sesudahnya, atau ditandai selesai.
-- Saat menggeser, pilih hari dan **sesi** (otomatis, siang 13.15, siang 2 16.00, malam 19.00) atau isi jam lain. Baris daftar, detail, dan timeline Hari Ini selalu menampilkan hari dan jam/sesi yang berlaku (mis. "Sel 24 Nov ↔ · siang 2 16.00"). Tryout yang tidak digeser tetap di sesinya sendiri. Tanpa pilihan sesi, tryout yang digeser mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis: siang 2 16.00; Jumat: siang 13.15 dan siang 2 16.00; di luar itu dipakai "Jam mulai" yang Anda isi sendiri). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
+- **Geser** hanya ke hari lain di minggu yang sama, supaya jumlah tryout tiap minggu tetap dan total tetap 151. Tryout dianggap *terlewat* bila belum selesai dan tanggalnya sudah lewat (WITA); peringatannya hilang bila digeser ke hari ini atau sesudahnya, atau ditandai selesai.
+- Saat menggeser, pilih hari dan **sesi** (otomatis, pagi 09.30, siang 13.15, siang 2 16.00, malam 19.00) atau isi jam lain. Baris daftar, detail, dan timeline Hari Ini selalu menampilkan hari dan jam/sesi yang berlaku (mis. "Sel 24 Nov ↔ · siang 2 16.00"). Tryout yang tidak digeser tetap di sesinya sendiri. Tanpa pilihan sesi, tryout yang digeser mengisi slot jadwal harian yang kosong; bila sudah penuh, dipakai slot tambahan (Senin–Kamis: siang 2 16.00; Jumat: siang 13.15 dan siang 2 16.00; di luar itu dipakai "Jam mulai" yang Anda isi sendiri). Anda juga bisa mengisi "Jam mulai". Jam yang bentrok ditandai.
 - **Total** dihitung bila ketiga skor terisi. Skor valid: TWK 0–150, TIU 0–175, TKP 0–225 (bilangan bulat). Mengisi skor otomatis menandai tryout selesai.
 - **Skor mentok**: rata-rata mingguan TWK atau TKP, tiga minggu berurutan, minimal 3 tryout bernilai per minggu, tidak naik dua kali berturut-turut (sama atau turun).
 - **Paket dobel**: nama dianggap sama bila huruf besar/kecil, spasi, dan tanda baca diabaikan.
@@ -86,8 +86,8 @@ Service worker memakai strategi *jaringan-dulu*: bila online, aplikasi selalu me
 ## Pengujian
 
 ```bash
-node tests/logic.test.js                          # 46 tes logika, tanpa dependensi
+node tests/logic.test.js                          # 47 tes logika, tanpa dependensi
 npm i -D playwright && node tests/e2e.test.js     # 152 pemeriksaan browser (Chromium), menulis screenshot ke screenshots/
 ```
 
-Catatan: versi pertama aplikasi mengikuti PDF "Jadwal Tryout Disiplin" (12 tryout per minggu, Senin–Minggu). Sejak revisi 24 November 2026 jadwal memakai pola di atas (15 tryout per minggu, Senin–Minggu); 7 aturan tetap dari PDF tetap berlaku, kecuali aturan ke-6 yang menyesuaikan.
+Catatan: versi pertama aplikasi mengikuti PDF "Jadwal Tryout Disiplin" (12 tryout per minggu, Senin–Minggu). Sejak revisi 24 November 2026 jadwal memakai pola di atas (15+ tryout per minggu, Senin–Minggu); 7 aturan tetap dari PDF tetap berlaku, kecuali aturan ke-6 yang menyesuaikan.

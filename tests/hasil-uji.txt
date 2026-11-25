@@ -1,72 +1,31 @@
-K1 jumlah dan periode
-  ok   total tepat 150, ID unik
-  ok   mulai Selasa 24 Nov 2026 (bukan Senin 23 Nov), selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb
-  ok   jumlah per hari: Sen-Kam 2, Jumat 1, Sabtu 3, Minggu 3 (15 per minggu penuh)
-  ok   minggu: 11 minggu (13, lalu 9 minggu × 15, lalu 2) = 150
-  ok   awal minggu tepat: minggu 1 Sen 23 Nov, minggu 2 Sen 30 Nov, minggu 11 Sen 1 Feb 2027
-  ok   Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 1 tryout malam (boleh digeser)
-  ok   semua 150 tryout selesai sebelum SKD bawaan 8 Feb 2027; SKD tersisa 7 hari tenang
-K2 templat harian
-  ok   Selasa 24 Nov: siang 13.15 + malam 19.00
-  ok   Senin-Kamis semuanya memakai templat yang sama
-  ok   siang dulu, malam kemudian (nomor kecil = siang)
-  ok   Jumat: 1 malam; Sabtu: siang 13.15, siang 2 16.00, malam 19.00; Minggu sama + baca ulang 22.00
-  ok   tidak ada "undefined"/"null"/"NaN" di label jadwal: setiap tryout punya sesi, tidak ada tabrakan jam, tanpa jam pagi
-  ok   Senin 23 Nov (belum ada tryout): hanya tidur; Senin 1 Feb 2027 2 tryout, Selasa 2 Feb tanpa tryout
-  ok   fase: sebelum, program, tenang, SKD, setelah
-K3 geser tryout
-  ok   geser ke hari lain di minggu yang sama (termasuk Jumat libur dan akhir pekan): berhasil, total 150 dan jumlah per minggu tetap
-  ok   geser ke minggu lain ditolak (termasuk 31 Des ke 4 Jan)
-  ok   tryout pertama (minggu 1 mulai Selasa) tidak bisa digeser ke minggu 2, tapi boleh ke Sen 23 Nov? (hari sebelum mulai, masih minggu 1)
-  ok   2000 geseran acak tidak pernah mengubah total 150 atau jumlah per minggu
-  ok   tryout digeser ke hari penuh mendapat slot tambahan tanpa tabrakan; kembalikan ke jadwal awal
-  ok   Jumat (1 tryout) diisi 2 tryout geseran: slot siang 13.15 dan siang 2 16.00, tanpa tabrakan
-  ok   jam mulai kustom, dan bentrok ditandai
-  ok   delapan tryout dipindah ke satu Sabtu (sudah 3): 3 slot berjam, 8 jam fleksibel
-Jadwal efektif setelah digeser (jam/sesi ikut berubah)
-  ok   scheduleMap: jadwal awal punya sesi dan jam; tidak ada undefined
-  ok   geser hanya jam di hari yang sama (pilih sesi): jam/sesi berubah dan tampil di timeline
-  ok   geser ke hari lain: sesi mengikuti slot kosong hari tujuan; jam kustom tampil sebagai jam; tanpa jam = jam belum diatur
-  ok   kembalikan ke jadwal awal: jam dan sesi kembali
-K6/K7 skor, ambang, progres
-  ok   total otomatis dan lulus per subtes (default 65/80/166)
-  ok   ambang bisa diubah
-  ok   skor di luar batas ditolak (TWK maks 150, TIU 175, TKP 225)
-  ok   progres per minggu x/total minggu dan total x/150
-  ok   hitung mundur SKD (default 8 Feb 2027)
-K8/K9 terlewat, libur, paket dobel, SKD
-  ok   terlewat: belum selesai dan tanggal lewat; hilang bila digeser ke depan atau selesai
-  ok   paket dobel: huruf besar, spasi, tanda baca diabaikan
-  ok   libur: tryout malam Jumat Natal terdeteksi; hilang bila digeser ke hari lain di minggu itu
-  ok   tryout pada/setelah tanggal SKD terdeteksi (SKD bawaan 8 Feb: 0; SKD 1 Feb: 2)
-K10 tren dan skor mentok
-  ok   rata-rata per minggu
-  ok   mentok: rata-rata tidak naik dua minggu berturut-turut
-  ok   tidak mentok bila ada kenaikan; tidak dicek bila minggu tidak berurutan atau data < 3 tryout
-K11 catatan pelajaran harian
-  ok   setLesson: simpan, ubah, kosong = hapus, tanggal tidak valid ditolak, dipangkas 1000 huruf
-  ok   lessonDates terbaru dulu; cadangan lama berisi buku soal salah tetap bisa diimpor tanpa merusak
-K15 ekspor/impor
-  ok   ekspor lalu impor menghasilkan state identik
-  ok   impor menolak JSON rusak, berkas asing, versi lain, dan membersihkan data berbahaya
-  ok   cadangan lama (jadwal sebelum revisi) tidak merusak: tanggal geser yang tak cocok minggu dibuang
-K4 waktu WITA dan hitung mundur
-  ok   WITA = UTC+8
-  ok   kegiatan berjalan dan berikutnya (Selasa 24 Nov 19.30 WITA)
-  ok   siang: jeda, lewat tengah malam, sebelum program, dan setelah program
+node:internal/bootstrap/switches/does_own_process_state:142
+    cachedCwd = rawMethods.cwd();
+                           ^
 
-46 tes lulus
-K4 Hari Ini (Selasa 24 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
+Error: ENOENT: no such file or directory, uv_cwd
+    at process.wrappedCwd [as cwd] (node:internal/bootstrap/switches/does_own_process_state:142:28)
+    at node:path:1251:24
+    at Object.resolve (node:path:1285:19)
+    at resolveMainPath (node:internal/modules/run_main:39:38)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:163:20)
+    at node:internal/main/run_main_module:36:49 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_cwd'
+}
+
+Node.js v22.23.5
+K4 Hari Ini (Senin 30 Nov 2026 19.30 WITA = 11.30 UTC; peramban di zona Los Angeles)
   ok    tanggal ditampilkan dalam WITA
   ok    kegiatan berjalan disorot: Tryout malam 19.00–20.40
   ok    timeline Selasa: 6 kegiatan (tryout siang, bahas, tryout malam, bahas, santai, tidur)
   ok    hitung mundur ke kegiatan berikutnya (Pembahasan 20.50), kira-kira 01:20:00
   ok    hitung mundur berkurang tiap detik
-  ok    SKD H-76 dan progres 0/150
+  ok    SKD H-70 dan progres 0/151
   ok    setelah 81 menit, sorotan pindah ke Pembahasan
   ok    tanpa galat konsol
 K5/K14/K9 checklist, skor, persistensi, paket dobel
-  ok    centang selesai di timeline menaikkan progres ke 1/150
+  ok    centang selesai di timeline menaikkan progres ke 1/151
   ok    total dihitung otomatis 319
   ok    lulus/tidak per subtes: TWK ✓, TIU ✗, TKP ✓
   ok    skor di luar batas ditolak dengan pesan
@@ -75,18 +34,17 @@ K5/K14/K9 checklist, skor, persistensi, paket dobel
   ok    daftar skor memuat nilai setelah reload
   ok    peringatan paket dobel di dalam sheet
   ok    peringatan paket dobel di halaman Skor
-K3/K8 geser tryout (termasuk ke Jumat Natal) dan peringatan terlewat
+K3/K8 geser tryout (hari libur Natal 4 tryout) dan peringatan terlewat
   ok    peringatan terlewat muncul (tryout minggu-minggu lalu belum selesai)
-  ok    Kamis 24 Des punya 2 tryout; Jumat 25 Des (Natal) punya 1 tryout malam
-  ok    peringatan libur Natal sudah muncul sejak awal (1 tryout di hari libur)
-  ok    minggu 5 menampilkan catatan Natal
+  ok    Kamis 24 Des (cuti bersama Natal) dan Jumat 25 Des (Natal) masing-masing 4 tryout
+  ok    tidak ada peringatan "bisa digeser" untuk hari libur (hari libur memang dipakai)
+  ok    minggu 4 menampilkan catatan Natal dan libur panjang
+  ok    minggu 4: 22 tryout, yang di 24-27 Des ditandai "libur" dan berjam pagi/siang/siang 2/malam
+  ok    detail tryout libur menyebut keterangan Cuti bersama Natal dan jam pagi 09.30
   ok    pilihan geser hanya 7 hari di minggu yang sama (21–27 Des)
-  ok    toast konfirmasi geser ke Jumat 25 Desember
-  ok    setelah geser: total tetap 150, jumlah tiap minggu tetap, 1 tryout bertanda digeser
-  ok    peringatan Natal: sekarang 2 tryout bisa digeser (1 asli + 1 geseran)
-  ok    geser dari hari libur: sisa 1 tryout di peringatan Natal
-  ok    geser dari hari libur: sisa 0 tryout di peringatan Natal
-  ok    minggu 5: tryout geseran bertanda ↔
+  ok    pesan geser ke Senin 21 Des menyebut jam baru
+  ok    setelah geser: total tetap 151, jumlah tiap minggu tetap, 1 tryout bertanda digeser
+  ok    minggu 4: tryout geseran bertanda ↔
   ok    kembalikan ke jadwal awal (Kamis 24 Des)
   ok    Tahun Baru: Kamis 31 Des bisa digeser ke Jumat 1 Jan, tidak ke Senin 4 Jan (minggu lain)
 K10/K12/K15 tren, kalender, ekspor dan impor JSON
@@ -108,7 +66,7 @@ K11/K20 catatan pelajaran harian, pengingat Minggu 22.00, XSS
   ok    tab Tryout punya kartu Pelajaran hari ini (belum ditulis)
   ok    editor pelajaran: hanya satu kolom teks (tanpa subtes/topik)
   ok    simpan kosong ditolak dan tidak menyimpan apa pun
-  ok    tersimpan untuk tanggal hari ini (WITA 2026-11-29) dan tampil di kartu
+  ok    tersimpan untuk tanggal hari ini (WITA 2026-12-06) dan tampil di kartu
   ok    XSS: HTML ditampilkan sebagai teks, tidak dieksekusi
   ok    Rekap > Pelajaran: 1 catatan di daftar
   ok    ubah catatan
@@ -117,7 +75,7 @@ K11/K20 catatan pelajaran harian, pengingat Minggu 22.00, XSS
   ok    tombol Tulis di Rekap menyimpan catatan hari ini
   ok    XSS lewat nama paket tidak dieksekusi
 K13 pengaturan: SKD, ambang, tema
-  ok    ubah tanggal SKD ke 15 Feb: hitung mundur H-83
+  ok    ubah tanggal SKD ke 15 Feb: hitung mundur H-77
   ok    SKD sebelum tryout terakhir memunculkan peringatan
   ok    ambang tidak valid dikembalikan ke nilai lama (80)
   ok    mode gelap menerapkan data-theme
@@ -125,7 +83,7 @@ K13 pengaturan: SKD, ambang, tema
   ok    pengaturan bertahan setelah reload
 Navigasi sederhana: 2 tab + ikon pengaturan
   ok    alamat lama #/hari-ini membuka tab Tryout
-  ok    tab Tryout memuat timeline hari ini, progres, dan 11 minggu dengan 150 baris tryout
+  ok    tab Tryout memuat timeline hari ini, progres, dan 10 minggu dengan 151 baris tryout
   ok    hanya 2 tautan di navigasi bawah
   ok    tab Rekap aktif: grafik skor
   ok    Rekap > Pelajaran: tombol tulis pelajaran hari ini, tanpa filter subtes
@@ -163,14 +121,14 @@ Warna polos di semua halaman dan dialog (gelap dan terang)
 Geser tryout: tanggal dan jam/sesi baru tampil di daftar, detail, dan timeline
   ok    sebelum geser: baris #1 menampilkan "siang 13.15"
   ok    detail menampilkan jam tryout
-  ok    ada pilihan sesi: otomatis, siang, siang 2, malam
+  ok    ada pilihan sesi: otomatis, pagi, siang, siang 2, malam
   ok    detail setelah geser: jam siang 2 16.00 dan "digeser dari"
   ok    pesan geser menyebut jam baru
   ok    baris #1 kini menampilkan tanggal DAN jam baru: "↔ · siang 2 16.00"
   ok    timeline Hari Ini: Tryout siang 2 pukul 16.00–17.40 dan malam tetap 19.00
   ok    jam kustom 14:30 tampil di baris sebagai "14.30"
   ok    kembalikan: baris kembali "siang 13.15" tanpa ↔
-  ok    geser ke Sabtu 28 Nov malam: baris menampilkan "Sab 28 Nov ↔ · malam 19.00"
+  ok    geser ke Sabtu 5 Des malam: baris menampilkan "Sab 5 Des ↔ · malam 19.00"
 Tidak ada undefined/null/NaN di tampilan
   ok    tanpa undefined/null/NaN di #/tryout
   ok    tanpa undefined/null/NaN di #/rekap
@@ -178,7 +136,8 @@ Tidak ada undefined/null/NaN di tampilan
   ok    tanpa undefined/null/NaN di #/pengaturan
   ok    150 baris tryout, tiap baris punya sesi: siang 13.15 / siang 2 16.00 / malam 19.00 atau tanda geser
   ok    Sabtu 19 Des dan Minggu 20 Des masing-masing 3 tryout
-  ok    sheet 6 tryout Sabtu-Minggu tanpa undefined/null/NaN
+  ok    hari libur 24 Des dan 5 Jan masing-masing 4 tryout
+  ok    sheet 14 tryout (Sabtu, Minggu, hari libur) tanpa undefined/null/NaN
   ok    timeline hari ini tanpa undefined
   ok    tanpa galat konsol
 K16 layout 375 px
@@ -214,8 +173,8 @@ K17 PWA: manifest, service worker, offline
   ok    halaman dikendalikan service worker setelah muat ulang
   ok    cangkang aplikasi ter-cache
   ok    OFFLINE: halaman tetap termuat setelah reload
-  ok    OFFLINE: data lokal tetap ada (1/150)
-  ok    OFFLINE: kalender 11 minggu tampil
+  ok    OFFLINE: data lokal tetap ada (1/151)
+  ok    OFFLINE: kalender 10 minggu tampil
   ok    OFFLINE: menulis pelajaran berfungsi
   ok    OFFLINE: berkas aplikasi dilayani dari cache
   ok    status offline di Pengaturan: siap

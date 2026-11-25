@@ -74,13 +74,6 @@
       if (miss.length) {
         out.push('<div class="warn bad"><p>' + miss.length + ' tryout terlewat. Ketuk nomornya, lalu geser ke hari lain di minggu yang sama.</p><div class="chips">' + miss.map(function (t) { return chipBtn(t, d0) + '<span class="sub">' + esc(shortDay(t.date)) + '</span>'; }).join(' ') + '</div></div>');
       }
-      var hp = S.holidayPending(state, d0, 14);
-      if (hp.length) {
-        var dates = {}; hp.forEach(function (t) { (dates[t.date] = dates[t.date] || []).push(t); });
-        Object.keys(dates).forEach(function (dt) {
-          out.push('<div class="warn"><p>' + esc(S.HOLIDAYS[dt]) + ', ' + esc(shortDay(dt)) + ': ' + dates[dt].length + ' tryout bisa digeser ke hari lain minggu itu.</p><div class="chips">' + dates[dt].map(function (t) { return chipBtn(t, d0); }).join(' ') + '</div></div>');
-        });
-      }
       var as = S.afterSkd(state);
       if (as.length) out.push('<div class="warn bad"><p>Tanggal SKD lebih awal dari tryout terakhir: ' + as.length + ' tryout belum selesai melewati hari SKD.</p></div>');
     }
@@ -148,11 +141,11 @@
   }
 
   /* ---------- Kalender ---------- */
-  var WEEK_NOTES = { 1: 'Mulai Selasa 24 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 5: 'Natal jatuh Jumat 25 Des. Tryout hari itu boleh digeser ke hari lain di minggu ini.', 6: 'Tahun Baru jatuh Jumat 1 Jan. Tryout hari itu boleh digeser ke hari lain di minggu ini.', 11: 'Tryout terakhir: Senin 1 Februari 2027. Sesudahnya minggu tenang sampai SKD.' };
+  var WEEK_NOTES = { 1: 'Mulai Senin 30 Nov. Pekan pengumuman formasi: sekalian buat akun SSCASN dan siapkan berkas.', 4: 'Natal: Kamis 24 Des (cuti bersama) sampai Minggu 27 Des libur panjang, 4 tryout per hari (pagi 09.30, siang, siang 2, malam).', 5: 'Tahun Baru: Jumat 1 Jan sampai Minggu 3 Jan libur panjang, 4 tryout per hari.', 6: 'Selasa 5 Jan libur Isra Mikraj: 4 tryout.', 10: 'Tryout terakhir: Senin 1 Februari 2027. Sesudahnya minggu tenang sampai SKD (5 Feb cuti bersama Imlek, 6 Feb Imlek).' };
   var RULES = ['Setiap tryout wajib dibahas. Kalau waktunya mepet, potong tryoutnya, jangan potong pembahasannya.', 'Setiap hari tulis satu catatan singkat: pelajaran yang didapat hari ini. Catatan dibaca ulang setiap Minggu malam.', 'Pantau skor TWK dan TKP tiap minggu. Kalau dua minggu berturut-turut mentok, ganti sebagian tryout dengan belajar materi.', 'Pakai paket tryout yang berbeda dari beberapa sumber. Mengulang paket yang sama membuat skor naik palsu.', 'Kalau badan terlalu capek atau skor mentok, utamakan kesehatan dan pembahasan dulu, baru kejar targetnya.', 'Setelah tryout terakhir sampai hari SKD tidak ada tryout: cukup baca ulang catatan pelajaran dan jaga tidur.', 'Kalau ada hari yang terlewat (libur, sakit, lembur), geser tryoutnya ke hari lain di minggu yang sama supaya total tetap ' + S.TOTAL + '.'];
   function rowHtml(t, d0, thr, sm) {
     var tot = S.totalScore(t), st = S.statusOf(t, d0);
-    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : '') + ' · ' + esc(sm[t.id] ? sm[t.id].text : t.session) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.HOLIDAYS[t.date] ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
+    return '<li class="item"><label class="chk big"><input type="checkbox" data-done="' + t.id + '"' + (t.done ? ' checked' : '') + ' aria-label="Tryout ' + t.n + ' selesai"><span></span></label><button class="main" data-open="' + t.id + '"><span class="l1">#' + t.n + ' · ' + esc(shortDay(t.date)) + (t.moved ? ' ↔' : '') + ' · ' + esc(sm[t.id] ? sm[t.id].text : t.session) + ' <span class="st s-' + st + '">' + { selesai: 'selesai', terlewat: 'terlewat', 'hari-ini': 'hari ini', terjadwal: 'terjadwal' }[st] + '</span>' + (S.dayNote(t.date) ? ' <span class="st">libur</span>' : '') + '</span><span class="l2">' + (t.name ? esc(t.name) : 'Belum ada nama paket') + (t.done ? (t.reviewed ? ' · dibahas' : ' · belum dibahas') : '') + '</span>' + (t.done || t.twk !== null || t.tiu !== null || t.tkp !== null ? '<span class="pills">' + pill('TWK', t.twk, thr.twk) + pill('TIU', t.tiu, thr.tiu) + pill('TKP', t.tkp, thr.tkp) + '<span class="pill tot">Total ' + (tot === null ? '—' : tot) + '</span></span>' : '') + '</button></li>';
   }
   function weeksBlock() {
     var d0 = today(), cw = S.weekOf(d0), list = S.tryoutList(state), ws = S.weekStats(state), thr = state.settings.thr, sm = S.scheduleMap(state);
@@ -166,13 +159,13 @@
       if (WEEK_NOTES[w]) h += '<p class="note">' + esc(WEEK_NOTES[w]) + '</p>';
       h += '<ul class="list">' + wl.map(function (t) { return rowHtml(t, d0, thr, sm); }).join('') + '</ul></details>';
     }
-    h += '<p class="hint">Jadwal: Senin–Kamis 2 tryout per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam), Sabtu dan Minggu 3 (siang 13.15, siang 2 16.00, malam 19.00); tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
+    h += '<p class="hint">Jadwal: Senin–Kamis 2 tryout per hari (siang 13.15 dan malam 19.00), Jumat 1 (malam), Sabtu dan Minggu 3 (siang 13.15, siang 2 16.00, malam 19.00). Hari libur (24–27 Des, 1–3 Jan, 5 Jan) 4 tryout (ditambah pagi 09.30). Tryout terakhir ' + esc(S.fmtLong(S.LAST_TRYOUT_DATE)) + '. Setelah itu minggu tenang sampai hari SKD (' + esc(S.fmtLong(state.settings.skdDate)) + ').</p>';
     return h;
   }
   function pageHead(title, sub, noGear) {
     return '<header class="page-h"><div><h1>' + esc(title) + '</h1><p>' + esc(sub) + '</p></div>' + (noGear ? '<a class="gear" href="#/tryout">Kembali</a>' : '<a class="gear" href="#/pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></a>') + '</header>';
   }
-  function viewTryout() { return pageHead('Tryout', S.TOTAL + ' tryout · 15 per minggu') + todayBlock() + weeksBlock(); }
+  function viewTryout() { return pageHead('Tryout', S.TOTAL + ' tryout · min. 15 per minggu') + todayBlock() + weeksBlock(); }
 
 
   /* ---------- Skor ---------- */
@@ -262,7 +255,7 @@
     var start = S.weekStart(t.week), list = S.tryoutList(state), o = '';
     for (var k = 0; k < 7; k++) {
       var dt = S.addDays(start, k), c = list.filter(function (x) { return x.date === dt && x.id !== t.id; }).length;
-      o += '<option value="' + dt + '"' + (dt === t.date ? ' selected' : '') + '>' + esc(S.DAY_NAMES[k] + ' ' + S.fmtShort(dt)) + ' · ' + c + ' TO lain' + (S.HOLIDAYS[dt] ? ' · libur ' + esc(S.HOLIDAYS[dt]) : '') + (dt === t.baseDate ? ' · jadwal awal' : '') + '</option>';
+      o += '<option value="' + dt + '"' + (dt === t.date ? ' selected' : '') + '>' + esc(S.DAY_NAMES[k] + ' ' + S.fmtShort(dt)) + ' · ' + c + ' TO lain' + (S.dayNote(dt) ? ' · ' + esc(S.dayNote(dt)) : '') + (dt === t.baseDate ? ' · jadwal awal' : '') + '</option>';
     }
     return o;
   }
@@ -278,7 +271,7 @@
     var preset = t.start !== null && S.SESSIONS.some(function (x) { return x.to[0] === t.start; });
     var time = t.start !== null && !preset ? S.fmtTime(t.start).replace('.', ':') : '';
     var sesiOpts = '<option value="">Otomatis (slot kosong di hari itu)</option>' + S.SESSIONS.map(function (x) { return '<option value="' + x.to[0] + '"' + (preset && t.start === x.to[0] ? ' selected' : '') + '>' + esc(x.name + ' ' + S.fmtTime(x.to[0])) + '</option>'; }).join('');
-    sheetBody.innerHTML = '<div class="sh-h"><div><h2>Tryout #' + t.n + ' <small>dari ' + S.TOTAL + '</small></h2><p class="sub">Minggu ' + t.week + ' · ' + esc(S.fmtLong(t.date)) + (S.HOLIDAYS[t.date] ? ' · ' + esc(S.HOLIDAYS[t.date]) : '') + '</p><p class="sub">Jam: <b>' + esc(sm.text) + '</b>' + (sm.end !== null && sm.end !== undefined ? ' (tryout s/d ' + S.fmtTime(sm.end) + ')' : '') + (t.moved ? ' · digeser dari ' + esc(shortDay(t.baseDate)) + ' ' + esc(t.session) : '') + '</p></div><button class="btn small" data-act="close-sheet" aria-label="Tutup">Tutup</button></div>' +
+    sheetBody.innerHTML = '<div class="sh-h"><div><h2>Tryout #' + t.n + ' <small>dari ' + S.TOTAL + '</small></h2><p class="sub">Minggu ' + t.week + ' · ' + esc(S.fmtLong(t.date)) + (S.dayNote(t.date) ? ' · ' + esc(S.dayNote(t.date)) : '') + '</p><p class="sub">Jam: <b>' + esc(sm.text) + '</b>' + (sm.end !== null && sm.end !== undefined ? ' (tryout s/d ' + S.fmtTime(sm.end) + ')' : '') + (t.moved ? ' · digeser dari ' + esc(shortDay(t.baseDate)) + ' ' + esc(t.session) : '') + '</p></div><button class="btn small" data-act="close-sheet" aria-label="Tutup">Tutup</button></div>' +
       '<label class="chk big row"><input type="checkbox" data-f="done"' + (t.done ? ' checked' : '') + '><span>Selesai dikerjakan</span></label>' +
       '<div class="field"><label for="f-name">Nama atau sumber paket</label><input id="f-name" type="text" maxlength="120" autocomplete="off" value="' + esc(t.name) + '" data-f="name" placeholder="mis. Bimbel A – Paket 3"></div><p class="warn-inline" id="dup">' + esc(dupNote(t)) + '</p>' +
       '<div class="grid3">' + ['twk', 'tiu', 'tkp'].map(function (k) { return '<div class="field"><label for="f-' + k + '">' + k.toUpperCase() + ' <small>(maks ' + S.MAX[k] + ')</small></label><input id="f-' + k + '" type="number" inputmode="numeric" min="0" max="' + S.MAX[k] + '" step="1" value="' + (t[k] === null ? '' : t[k]) + '" data-f="' + k + '"></div>'; }).join('') + '</div>' +

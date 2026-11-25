@@ -1,65 +1,81 @@
 'use strict';
 // Jalankan: node tests/logic.test.js  (tanpa dependensi)
-// Jadwal revisi 2026-11-24: mulai Selasa 24 Nov 2026; Sen-Kam 2 per hari, Jumat 1 (malam), Sabtu 2, Minggu 1 (siang) = 12 per minggu; selesai Senin 1 Feb 2027.
+// Jadwal revisi 2026-11-25: mulai Senin 30 Nov 2026; hari biasa 15 per minggu (Sen-Kam 2, Jum 1, Sab 3, Min 3), hari libur 4 tryout; 151 tryout selesai Senin 1 Feb 2027.
 const assert = require('assert');
 const S = require('../schedule.js');
 let passed = 0;
 function t(name, fn) { try { fn(); passed++; console.log('  ok   ' + name); } catch (e) { console.log('  GAGAL ' + name + '\n       ' + e.message); process.exitCode = 1; } }
-const BASE_COUNTS = [13].concat(Array(9).fill(15), [2]);
+const BASE_COUNTS = [15, 15, 15, 22, 20, 17, 15, 15, 15, 2];
+const EXTRA = ['2026-12-24', '2026-12-25', '2026-12-26', '2026-12-27', '2027-01-01', '2027-01-02', '2027-01-03', '2027-01-05'];
 function weekCounts(l) { const c = {}; l.forEach(x => { c[x.week] = (c[x.week] || 0) + 1; }); return Object.keys(c).map(Number).sort((a, b) => a - b).map(w => c[w]); }
 
 console.log('K1 jumlah dan periode');
-t('total tepat 150, ID unik', () => {
+t('total tepat 151, ID unik', () => {
   const l = S.tryoutList(S.newState());
-  assert.strictEqual(l.length, 150);
-  assert.strictEqual(new Set(l.map(x => x.id)).size, 150);
-  assert.strictEqual(S.TOTAL, 150);
+  assert.strictEqual(l.length, 151);
+  assert.strictEqual(new Set(l.map(x => x.id)).size, 151);
+  assert.strictEqual(S.TOTAL, 151); assert.strictEqual(l[150].id, 'T151');
 });
-t('mulai Selasa 24 Nov 2026 (bukan Senin 23 Nov), selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb', () => {
+t('mulai Senin 30 Nov 2026 (tidak ada tryout minggu ini), selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb', () => {
   const l = S.tryoutList(S.newState());
-  assert.strictEqual(l[0].date, '2026-11-24'); assert.strictEqual(S.dayIdx('2026-11-24'), 1);
-  assert.strictEqual(l[149].date, '2027-02-01'); assert.strictEqual(S.dayIdx('2027-02-01'), 0);
-  assert.strictEqual(S.FIRST_DATE, '2026-11-24'); assert.strictEqual(S.LAST_TRYOUT_DATE, '2027-02-01');
-  assert.ok(!l.some(x => x.date === '2026-11-23'));
+  assert.strictEqual(l[0].date, '2026-11-30'); assert.strictEqual(S.dayIdx('2026-11-30'), 0);
+  assert.strictEqual(l[150].date, '2027-02-01'); assert.strictEqual(S.dayIdx('2027-02-01'), 0);
+  assert.strictEqual(S.FIRST_DATE, '2026-11-30'); assert.strictEqual(S.LAST_TRYOUT_DATE, '2027-02-01');
+  assert.ok(!l.some(x => x.date < '2026-11-30'));
   assert.ok(l.every(x => x.date < S.DEFAULT_SETTINGS.skdDate));
 });
-t('jumlah per hari: Sen-Kam 2, Jumat 1, Sabtu 3, Minggu 3 (15 per minggu penuh)', () => {
+t('jumlah per hari: hari biasa Sen-Kam 2, Jumat 1, Sabtu 3, Minggu 3; hari libur dan libur panjang 4', () => {
   const l = S.tryoutList(S.newState()), d = {};
   l.forEach(x => { d[x.date] = (d[x.date] || 0) + 1; });
   const want = [2, 2, 2, 2, 1, 3, 3];
-  Object.keys(d).forEach(date => { const i = S.dayIdx(date); if (date !== '2027-02-01') assert.strictEqual(d[date], want[i], date); });
-  assert.strictEqual(d['2027-02-01'], 2);
-  assert.strictEqual(Object.keys(d).length, 70); // 6 hari (minggu 1) + 9 minggu × 7 hari + 1 hari (Senin 1 Feb)
+  Object.keys(d).forEach(date => {
+    if (date === '2027-02-01') return assert.strictEqual(d[date], 2);
+    assert.strictEqual(d[date], EXTRA.indexOf(date) >= 0 ? 4 : want[S.dayIdx(date)], date);
+  });
+  assert.strictEqual(Object.keys(d).length, 64); // 9 minggu × 7 hari + Senin 1 Feb
 });
-t('minggu: 11 minggu (13, lalu 9 minggu × 15, lalu 2) = 150', () => {
-  assert.strictEqual(S.WEEKS, 11);
+t('minggu: 10 minggu (15, 15, 15, 22, 20, 17, 15, 15, 15, 2) = 151; minimal 15 per minggu kecuali minggu penutup', () => {
+  assert.strictEqual(S.WEEKS, 10);
   assert.deepStrictEqual(weekCounts(S.tryoutList(S.newState())), BASE_COUNTS);
   assert.deepStrictEqual(S.WEEK_COUNTS, BASE_COUNTS);
-  assert.strictEqual(BASE_COUNTS.reduce((a, b) => a + b, 0), 150);
+  assert.strictEqual(BASE_COUNTS.reduce((a, b) => a + b, 0), 151);
+  BASE_COUNTS.slice(0, 9).forEach(c => assert.ok(c >= 15));
 });
-t('awal minggu tepat: minggu 1 Sen 23 Nov, minggu 2 Sen 30 Nov, minggu 11 Sen 1 Feb 2027', () => {
-  assert.strictEqual(S.weekStart(1), '2026-11-23'); assert.strictEqual(S.weekStart(2), '2026-11-30'); assert.strictEqual(S.weekStart(11), '2027-02-01');
+t('awal minggu tepat: minggu 1 Sen 30 Nov, minggu 4 Sen 21 Des, minggu 10 Sen 1 Feb 2027', () => {
+  assert.strictEqual(S.weekStart(1), '2026-11-30'); assert.strictEqual(S.weekStart(4), '2026-12-21'); assert.strictEqual(S.weekStart(10), '2027-02-01');
   assert.strictEqual(S.LAST_DATE, '2027-02-07');
 });
-t('Jumat 25 Des 2026 dan 1 Jan 2027 libur tapi tetap ada 1 tryout malam (boleh digeser)', () => {
-  ['2026-12-25', '2027-01-01'].forEach(d => { assert.strictEqual(S.dayIdx(d), 4); assert.strictEqual(S.buildDay(S.newState(), d).tryouts.length, 1); assert.ok(S.HOLIDAYS[d]); });
+t('hari libur resmi dipakai: 24 Des (cuti bersama Natal), 25 Des, 1 Jan, 5 Jan (Isra Mikraj); libur panjang 26-27 Des dan 2-3 Jan', () => {
+  assert.deepStrictEqual(Object.keys(S.HOLIDAYS).sort(), ['2026-12-24', '2026-12-25', '2027-01-01', '2027-01-05']);
+  assert.deepStrictEqual(Object.keys(S.EXTRA_DAYS).sort(), EXTRA);
+  assert.deepStrictEqual(['2026-12-24', '2026-12-25', '2027-01-01', '2027-01-05'].map(d => S.dayIdx(d)), [3, 4, 4, 1]);
+  EXTRA.forEach(d => { assert.strictEqual(S.buildDay(S.newState(), d).tryouts.length, 4, d); assert.ok(S.dayNote(d), d); });
 });
-t('semua 150 tryout selesai sebelum SKD bawaan 8 Feb 2027; SKD tersisa 7 hari tenang', () => {
+t('hari padat: 4 sesi (pagi 09.30, siang 13.15, siang 2 16.00, malam 19.00), jeda pembahasan cukup, tanpa bentrok', () => {
+  EXTRA.forEach(d => {
+    const ev = S.buildDay(S.newState(), d).events;
+    assert.deepStrictEqual(ev.filter(e => e.kind === 'tryout').map(e => S.fmtTime(e.start)), ['09.30', '13.15', '16.00', '19.00'], d);
+    assert.deepStrictEqual(ev.filter(e => e.kind === 'bahas').map(e => S.fmtTime(e.start) + '-' + S.fmtTime(e.end)), ['11.15-12.00', '15.00-15.45', '17.45-18.30', '20.50-21.50'], d);
+    assert.ok(!ev.some(e => e.conflict), d);
+  });
+});
+t('semua 151 tryout selesai sebelum SKD bawaan 8 Feb 2027; 2-7 Feb tenang (5 Feb cuti bersama, 6 Feb Imlek)', () => {
   const l = S.tryoutList(S.newState());
-  assert.strictEqual(l.filter(x => x.date < '2027-02-08').length, 150);
+  assert.strictEqual(l.filter(x => x.date < '2027-02-08').length, 151);
   assert.strictEqual(S.diffDays('2027-02-08', S.LAST_TRYOUT_DATE), 7);
+  for (let d = '2027-02-02'; d < '2027-02-08'; d = S.addDays(d, 1)) assert.strictEqual(S.buildDay(S.newState(), d).tryouts.length, 0);
 });
 
 console.log('K2 templat harian');
 function dayEvents(date, st) { return S.buildDay(st || S.newState(), date).events.map(e => [e.kind, S.fmtTime(e.start) + '-' + S.fmtTime(e.end), e.label].join('|')); }
-t('Selasa 24 Nov: siang 13.15 + malam 19.00', () => {
-  assert.deepStrictEqual(dayEvents('2026-11-24'), ['tryout|13.15-14.55|Tryout siang', 'bahas|15.00-15.45|Pembahasan', 'tryout|19.00-20.40|Tryout malam', 'bahas|20.50-21.50|Pembahasan', 'santai|21.50-23.00|Santai / istirahat', 'tidur|23.00-00.00|Tidur']);
+t('Senin 30 Nov: siang 13.15 + malam 19.00', () => {
+  assert.deepStrictEqual(dayEvents('2026-11-30'), ['tryout|13.15-14.55|Tryout siang', 'bahas|15.00-15.45|Pembahasan', 'tryout|19.00-20.40|Tryout malam', 'bahas|20.50-21.50|Pembahasan', 'santai|21.50-23.00|Santai / istirahat', 'tidur|23.00-00.00|Tidur']);
 });
-t('Senin-Kamis semuanya memakai templat yang sama', () => {
-  for (const d of ['2026-11-30', '2026-12-01', '2026-12-02', '2026-12-03', '2027-02-01']) assert.deepStrictEqual(dayEvents(d), dayEvents('2026-11-24'));
+t('Senin-Kamis biasa semuanya memakai templat yang sama', () => {
+  for (const d of ['2026-12-01', '2026-12-02', '2026-12-03', '2026-12-14', '2027-01-06', '2027-02-01']) assert.deepStrictEqual(dayEvents(d), dayEvents('2026-11-30'), d);
 });
 t('siang dulu, malam kemudian (nomor kecil = siang)', () => {
-  const d = S.buildDay(S.newState(), '2026-11-24');
+  const d = S.buildDay(S.newState(), '2026-11-30');
   assert.deepStrictEqual(d.tryouts, ['T001', 'T002']);
   assert.deepStrictEqual(d.events.filter(e => e.kind === 'tryout').map(e => e.toId + '@' + S.fmtTime(e.start)), ['T001@13.15', 'T002@19.00']);
 });
@@ -68,24 +84,24 @@ t('Jumat: 1 malam; Sabtu: siang 13.15, siang 2 16.00, malam 19.00; Minggu sama +
   const SIANG2 = ['tryout|16.00-17.40|Tryout siang 2', 'bahas|17.45-18.30|Pembahasan'];
   const MALAM = ['tryout|19.00-20.40|Tryout malam', 'bahas|20.50-21.50|Pembahasan'];
   const END = ['santai|21.50-23.00|Santai / istirahat', 'tidur|23.00-00.00|Tidur'];
-  assert.deepStrictEqual(dayEvents('2026-11-27'), [].concat(MALAM, END));
-  assert.deepStrictEqual(dayEvents('2026-11-28'), [].concat(SIANG, SIANG2, MALAM, END));
-  assert.deepStrictEqual(dayEvents('2026-11-29'), [].concat(SIANG, SIANG2, MALAM, ['baca|22.00-22.30|Baca ulang pelajaran minggu ini', 'tidur|23.00-00.00|Tidur']));
-  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-27').tryouts, ['T007']);
-  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-28').tryouts, ['T008', 'T009', 'T010']);
-  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-11-29').tryouts, ['T011', 'T012', 'T013']);
+  assert.deepStrictEqual(dayEvents('2026-12-04'), [].concat(MALAM, END));
+  assert.deepStrictEqual(dayEvents('2026-12-05'), [].concat(SIANG, SIANG2, MALAM, END));
+  assert.deepStrictEqual(dayEvents('2026-12-06'), [].concat(SIANG, SIANG2, MALAM, ['baca|22.00-22.30|Baca ulang pelajaran minggu ini', 'tidur|23.00-00.00|Tidur']));
+  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-12-04').tryouts, ['T009']);
+  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-12-05').tryouts, ['T010', 'T011', 'T012']);
+  assert.deepStrictEqual(S.buildDay(S.newState(), '2026-12-06').tryouts, ['T013', 'T014', 'T015']);
 });
-t('tidak ada "undefined"/"null"/"NaN" di label jadwal: setiap tryout punya sesi, tidak ada tabrakan jam, tanpa jam pagi', () => {
+t('tidak ada "undefined"/"null"/"NaN" di label jadwal: setiap tryout punya sesi, tidak ada tabrakan jam, pagi hanya di hari libur', () => {
   const st = S.newState(), l = S.tryoutList(st);
   l.forEach(x => { assert.ok(typeof x.session === 'string' && x.session.length > 0 && !/undefined|null|NaN/.test(x.session), x.id); });
-  assert.deepStrictEqual([...new Set(l.map(x => x.session))].sort(), ['malam 19.00', 'siang 13.15', 'siang 2 16.00']);
+  assert.deepStrictEqual([...new Set(l.map(x => x.session))].sort(), ['malam 19.00', 'pagi 09.30', 'siang 13.15', 'siang 2 16.00']);
   for (let d = S.START_DATE, i = 0; i < 80; i++, d = S.addDays(d, 1)) {
     const day = S.buildDay(st, d);
-    day.events.forEach(e => { assert.ok(!/undefined|null|NaN/.test(e.label + S.fmtTime(e.start) + S.fmtTime(e.end)), d + ' ' + e.label); assert.ok(!e.conflict, d + ' bentrok'); if (e.kind === 'tryout') assert.ok(e.start >= 13 * 60, d + ' ada tryout sebelum 13.00'); });
+    day.events.forEach(e => { assert.ok(!/undefined|null|NaN/.test(e.label + S.fmtTime(e.start) + S.fmtTime(e.end)), d + ' ' + e.label); assert.ok(!e.conflict, d + ' bentrok'); if (e.kind === 'tryout' && e.start < 13 * 60) assert.ok(S.EXTRA_DAYS[d], d + ' tryout pagi di hari biasa'); });
   }
 });
-t('Senin 23 Nov (belum ada tryout): hanya tidur; Senin 1 Feb 2027 2 tryout, Selasa 2 Feb tanpa tryout', () => {
-  assert.deepStrictEqual(dayEvents('2026-11-23'), ['tidur|23.00-00.00|Tidur']);
+t('sebelum mulai (23-29 Nov, minggu belajar): fase "sebelum", tanpa jadwal; Selasa 2 Feb hanya tidur', () => {
+  for (const d of ['2026-11-23', '2026-11-24', '2026-11-29']) { assert.strictEqual(S.buildDay(S.newState(), d).phase, 'sebelum'); assert.deepStrictEqual(dayEvents(d), [], d); }
   assert.deepStrictEqual(dayEvents('2027-02-02'), ['tidur|23.00-00.00|Tidur']);
 });
 t('fase: sebelum, program, tenang, SKD, setelah', () => {
@@ -98,115 +114,124 @@ t('fase: sebelum, program, tenang, SKD, setelah', () => {
 });
 
 console.log('K3 geser tryout');
-t('geser ke hari lain di minggu yang sama (termasuk Jumat libur dan akhir pekan): berhasil, total 150 dan jumlah per minggu tetap', () => {
+t('geser ke hari lain di minggu yang sama (termasuk hari libur Natal dan akhir pekan): berhasil, total 151 dan jumlah per minggu tetap', () => {
   const st = S.newState();
-  const thu = S.buildDay(st, '2026-12-24').tryouts; assert.strictEqual(thu.length, 2);
-  assert.ok(S.moveTryout(st, thu[0], '2026-12-25').ok);  // ke Jumat Natal
+  const thu = S.buildDay(st, '2026-12-24').tryouts; assert.strictEqual(thu.length, 4);
+  assert.ok(S.moveTryout(st, thu[0], '2026-12-21').ok);  // Natal ke Senin
   assert.ok(S.moveTryout(st, thu[1], '2026-12-27').ok);  // ke Minggu
   const l = S.tryoutList(st);
-  assert.strictEqual(l.length, 150); assert.deepStrictEqual(weekCounts(l), BASE_COUNTS);
-  assert.strictEqual(S.buildDay(st, '2026-12-24').tryouts.length, 0);
-  assert.strictEqual(S.buildDay(st, '2026-12-25').tryouts.length, 2); // 1 tryout asli + 1 geseran
+  assert.strictEqual(l.length, 151); assert.deepStrictEqual(weekCounts(l), BASE_COUNTS);
+  assert.strictEqual(S.buildDay(st, '2026-12-24').tryouts.length, 2);
+  assert.strictEqual(S.buildDay(st, '2026-12-21').tryouts.length, 3); // 2 asli + 1 geseran
   assert.ok(S.getTryout(st, thu[0]).moved);
 });
-t('geser ke minggu lain ditolak (termasuk 31 Des ke 4 Jan)', () => {
+t('geser ke minggu lain ditolak (termasuk Kamis 17 Des ke Senin 21 Des)', () => {
   const st = S.newState();
-  const id = S.buildDay(st, '2026-12-31').tryouts[0];
-  assert.strictEqual(S.moveTryout(st, id, '2027-01-04').ok, false);
-  assert.strictEqual(S.moveTryout(st, id, '2026-12-27').ok, false);
+  const id = S.buildDay(st, '2026-12-17').tryouts[0];
+  assert.strictEqual(S.moveTryout(st, id, '2026-12-21').ok, false);
+  assert.strictEqual(S.moveTryout(st, id, '2026-12-13').ok, false);
   assert.strictEqual(S.moveTryout(st, id, 'bukan-tanggal').ok, false);
   assert.strictEqual(S.moveTryout(st, id, '2026-11-23').ok, false);
-  assert.strictEqual(S.getTryout(st, id).date, '2026-12-31');
-  assert.ok(S.moveTryout(st, id, '2027-01-03').ok);
+  assert.strictEqual(S.getTryout(st, id).date, '2026-12-17');
+  assert.ok(S.moveTryout(st, id, '2026-12-20').ok);
 });
-t('tryout pertama (minggu 1 mulai Selasa) tidak bisa digeser ke minggu 2, tapi boleh ke Sen 23 Nov? (hari sebelum mulai, masih minggu 1)', () => {
+t('tryout pertama (Senin 30 Nov) boleh digeser dalam minggu 1 saja, tidak ke 29 Nov (minggu belajar) atau 7 Des', () => {
   const st = S.newState();
-  assert.strictEqual(S.moveTryout(st, 'T001', '2026-11-30').ok, false);
-  assert.strictEqual(S.moveTryout(st, 'T001', '2026-11-29').ok, true);
+  assert.strictEqual(S.moveTryout(st, 'T001', '2026-12-07').ok, false);
+  assert.strictEqual(S.moveTryout(st, 'T001', '2026-11-29').ok, false);
+  assert.strictEqual(S.moveTryout(st, 'T001', '2026-12-06').ok, true);
 });
-t('2000 geseran acak tidak pernah mengubah total 150 atau jumlah per minggu', () => {
+t('2000 geseran acak tidak pernah mengubah total 151 atau jumlah per minggu', () => {
   const st = S.newState(); let seed = 7;
   const rnd = n => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
   for (let i = 0; i < 2000; i++) {
-    const b = S.BASE[rnd(150)];
+    const b = S.BASE[rnd(151)];
     S.moveTryout(st, b.id, S.addDays(S.weekStart(b.week), rnd(7)), rnd(3) ? null : 8 * 60 + rnd(600));
     if (rnd(5) === 0) S.moveTryout(st, b.id, S.addDays(S.weekStart(b.week), 7 + rnd(30)));
   }
-  const l = S.tryoutList(st); assert.strictEqual(l.length, 150);
+  const l = S.tryoutList(st); assert.strictEqual(l.length, 151);
   l.forEach(x => assert.strictEqual(S.weekOf(x.date), x.week));
   assert.deepStrictEqual(weekCounts(l), BASE_COUNTS);
 });
 t('tryout digeser ke hari penuh mendapat slot tambahan tanpa tabrakan; kembalikan ke jadwal awal', () => {
   const st = S.newState();
-  const id = S.buildDay(st, '2026-12-22').tryouts[0];
-  S.moveTryout(st, id, '2026-12-23'); // Rabu sudah 2 tryout
-  const d = S.buildDay(st, '2026-12-23');
+  const id = S.buildDay(st, '2026-12-15').tryouts[0];
+  S.moveTryout(st, id, '2026-12-16'); // Rabu sudah 2 tryout
+  const d = S.buildDay(st, '2026-12-16');
   assert.strictEqual(d.tryouts.length, 3); assert.ok(!d.events.some(e => e.conflict));
   assert.deepStrictEqual(d.events.filter(e => e.kind === 'tryout').map(e => S.fmtTime(e.start)), ['13.15', '16.00', '19.00']);
   S.resetMove(st, id);
-  assert.strictEqual(S.getTryout(st, id).date, '2026-12-22'); assert.deepStrictEqual(st.tryouts, {});
+  assert.strictEqual(S.getTryout(st, id).date, '2026-12-15'); assert.deepStrictEqual(st.tryouts, {});
 });
 t('Jumat (1 tryout) diisi 2 tryout geseran: slot siang 13.15 dan siang 2 16.00, tanpa tabrakan', () => {
   const st = S.newState();
-  const [a, b] = S.buildDay(st, '2026-12-24').tryouts;
-  S.moveTryout(st, a, '2026-12-25'); // Jumat (Natal), minggu yang sama
-  S.moveTryout(st, b, '2026-12-25');
-  const d = S.buildDay(st, '2026-12-25');
+  const [a, b] = S.buildDay(st, '2026-12-17').tryouts;
+  S.moveTryout(st, a, '2026-12-18'); S.moveTryout(st, b, '2026-12-18');
+  const d = S.buildDay(st, '2026-12-18');
   assert.deepStrictEqual(d.events.filter(e => e.kind === 'tryout').map(e => S.fmtTime(e.start)), ['13.15', '16.00', '19.00']);
   assert.ok(!d.events.some(e => e.conflict || e.flex));
 });
 t('jam mulai kustom, dan bentrok ditandai', () => {
   const st = S.newState();
-  const id = S.buildDay(st, '2026-12-22').tryouts[0];
-  S.moveTryout(st, id, '2026-12-23', 19 * 60 + 30);
-  assert.ok(S.buildDay(st, '2026-12-23').events.some(e => e.conflict));
-  S.moveTryout(st, id, '2026-12-23', 6 * 60);
-  assert.ok(!S.buildDay(st, '2026-12-23').events.some(e => e.conflict));
+  const id = S.buildDay(st, '2026-12-15').tryouts[0];
+  S.moveTryout(st, id, '2026-12-16', 19 * 60 + 30);
+  assert.ok(S.buildDay(st, '2026-12-16').events.some(e => e.conflict));
+  S.moveTryout(st, id, '2026-12-16', 6 * 60);
+  assert.ok(!S.buildDay(st, '2026-12-16').events.some(e => e.conflict));
 });
 t('delapan tryout dipindah ke satu Sabtu (sudah 3): 3 slot berjam, 8 jam fleksibel', () => {
   const st = S.newState();
-  ['2026-12-21', '2026-12-22', '2026-12-23', '2026-12-24'].forEach(d => S.buildDay(st, d).tryouts.forEach(id => S.moveTryout(st, id, '2026-12-26')));
-  const ev = S.buildDay(st, '2026-12-26').events.filter(e => e.kind === 'tryout');
+  ['2026-12-14', '2026-12-15', '2026-12-16', '2026-12-17'].forEach(d => S.buildDay(st, d).tryouts.forEach(id => S.moveTryout(st, id, '2026-12-19')));
+  const ev = S.buildDay(st, '2026-12-19').events.filter(e => e.kind === 'tryout');
   assert.strictEqual(ev.length, 11); assert.strictEqual(ev.filter(e => e.flex).length, 8);
+});
+t('hari libur boleh dikosongkan dengan menggeser, dan tidak ada peringatan libur lagi (hari libur memang dipakai)', () => {
+  assert.strictEqual(S.holidayPending, undefined);
+  const st = S.newState(); const ids = S.buildDay(st, '2026-12-25').tryouts;
+  ids.forEach(id => assert.ok(S.moveTryout(st, id, '2026-12-23').ok));
+  assert.strictEqual(S.buildDay(st, '2026-12-25').tryouts.length, 0);
+  assert.strictEqual(S.buildDay(st, '2026-12-23').tryouts.length, 6);
 });
 
 console.log('Jadwal efektif setelah digeser (jam/sesi ikut berubah)');
 t('scheduleMap: jadwal awal punya sesi dan jam; tidak ada undefined', () => {
   const m = S.scheduleMap(S.newState());
-  assert.strictEqual(Object.keys(m).length, 150);
+  assert.strictEqual(Object.keys(m).length, 151);
   assert.strictEqual(m.T001.text, 'siang 13.15'); assert.strictEqual(m.T002.text, 'malam 19.00');
-  assert.strictEqual(m.T009.text, 'siang 2 16.00'); // Sabtu 28 Nov
+  assert.strictEqual(m.T009.text, 'malam 19.00'); // Jumat 4 Des
+  assert.strictEqual(m.T011.text, 'siang 2 16.00'); // Sabtu 5 Des
+  assert.strictEqual(m[S.buildDay(S.newState(), '2026-12-24').tryouts[0]].text, 'pagi 09.30'); // hari libur
   Object.values(m).forEach(x => assert.ok(x.text && !/undefined|null|NaN/.test(x.text)));
 });
 t('geser hanya jam di hari yang sama (pilih sesi): jam/sesi berubah dan tampil di timeline', () => {
   const st = S.newState();
-  assert.ok(S.moveTryout(st, 'T001', '2026-11-24', 16 * 60).ok);
+  assert.ok(S.moveTryout(st, 'T001', '2026-11-30', 16 * 60).ok);
   const m = S.scheduleMap(st);
   assert.strictEqual(m.T001.text, 'siang 2 16.00'); assert.strictEqual(m.T001.session, 'siang 2');
   assert.ok(S.getTryout(st, 'T001').moved);
-  const ev = S.buildDay(st, '2026-11-24').events.filter(e => e.kind === 'tryout').map(e => e.label + '@' + S.fmtTime(e.start));
+  const ev = S.buildDay(st, '2026-11-30').events.filter(e => e.kind === 'tryout').map(e => e.label + '@' + S.fmtTime(e.start));
   assert.deepStrictEqual(ev, ['Tryout siang 2@16.00', 'Tryout malam@19.00']);
-  assert.ok(!S.buildDay(st, '2026-11-24').events.some(e => e.conflict));
+  assert.ok(!S.buildDay(st, '2026-11-30').events.some(e => e.conflict));
 });
 t('geser ke hari lain: sesi mengikuti slot kosong hari tujuan; jam kustom tampil sebagai jam; tanpa jam = jam belum diatur', () => {
   const st = S.newState();
-  S.moveTryout(st, 'T001', '2026-11-27'); // Jumat: malam sudah dipakai T007
+  S.moveTryout(st, 'T001', '2026-12-04'); // Jumat: malam sudah dipakai T009
   assert.strictEqual(S.scheduleMap(st).T001.text, 'siang 13.15');
-  S.moveTryout(st, 'T001', '2026-11-27', 14 * 60);
+  S.moveTryout(st, 'T001', '2026-12-04', 14 * 60);
   assert.strictEqual(S.scheduleMap(st).T001.text, '14.00'); assert.strictEqual(S.scheduleMap(st).T001.session, null);
-  S.moveTryout(st, 'T001', '2026-11-27', 19 * 60); // sesi malam diambil T001 -> T007 (jadwal awal malam) otomatis pindah ke slot kosong, tanpa bentrok
-  assert.strictEqual(S.scheduleMap(st).T001.text, 'malam 19.00'); assert.strictEqual(S.scheduleMap(st).T007.text, 'siang 13.15');
-  assert.ok(!S.buildDay(st, '2026-11-27').events.some(e => e.conflict));
-  S.moveTryout(st, 'T001', '2026-11-27', 19 * 60 + 30); // jam kustom di luar sesi baku yang menimpa T007 malam: bentrok ditandai
-  assert.strictEqual(S.scheduleMap(st).T001.text, '19.30'); assert.ok(S.buildDay(st, '2026-11-27').events.some(e => e.conflict));
+  S.moveTryout(st, 'T001', '2026-12-04', 19 * 60); // sesi malam diambil T001 -> T009 (jadwal awal malam) otomatis pindah ke slot kosong, tanpa bentrok
+  assert.strictEqual(S.scheduleMap(st).T001.text, 'malam 19.00'); assert.strictEqual(S.scheduleMap(st).T009.text, 'siang 13.15');
+  assert.ok(!S.buildDay(st, '2026-12-04').events.some(e => e.conflict));
+  S.moveTryout(st, 'T001', '2026-12-04', 19 * 60 + 30); // jam kustom di luar sesi baku yang menimpa T009 malam: bentrok ditandai
+  assert.strictEqual(S.scheduleMap(st).T001.text, '19.30'); assert.ok(S.buildDay(st, '2026-12-04').events.some(e => e.conflict));
   const st2 = S.newState();
-  ['T001', 'T002', 'T003', 'T004'].forEach(id => S.moveTryout(st2, id, '2026-11-28')); // Sabtu: 3 + 4 geseran, slot habis
+  ['T001', 'T002', 'T003', 'T004'].forEach(id => S.moveTryout(st2, id, '2026-12-05')); // Sabtu: 3 + 4 geseran, slot habis
   const m = S.scheduleMap(st2);
   assert.ok(Object.values(m).some(x => x.flex && x.text === 'jam belum diatur'));
 });
 t('kembalikan ke jadwal awal: jam dan sesi kembali', () => {
   const st = S.newState();
-  S.moveTryout(st, 'T001', '2026-11-26', 19 * 60);
+  S.moveTryout(st, 'T001', '2026-12-03', 19 * 60);
   S.resetMove(st, 'T001');
   assert.strictEqual(S.scheduleMap(st).T001.text, 'siang 13.15'); assert.strictEqual(S.getTryout(st, 'T001').moved, false);
 });
@@ -234,12 +259,12 @@ t('skor di luar batas ditolak (TWK maks 150, TIU 175, TKP 225)', () => {
   assert.deepStrictEqual(st.tryouts, {});
   S.setField(st, 'T001', { twk: -1 }); assert.deepStrictEqual(st.tryouts, {});
 });
-t('progres per minggu x/total minggu dan total x/150', () => {
+t('progres per minggu x/total minggu dan total x/151', () => {
   const st = S.newState();
-  ['T001', 'T002', 'T014'].forEach(id => S.setField(st, id, { done: true })); // T014 = minggu 2
+  ['T001', 'T002', 'T016'].forEach(id => S.setField(st, id, { done: true })); // T016 = minggu 2
   const ws = S.weekStats(st);
-  assert.deepStrictEqual([ws[0].done, ws[0].total, ws[1].done, ws[1].total, ws[10].total], [2, 13, 1, 15, 2]);
-  assert.deepStrictEqual(S.totalStats(st), { done: 3, total: 150 });
+  assert.deepStrictEqual([ws[0].done, ws[0].total, ws[1].done, ws[1].total, ws[9].total], [2, 15, 1, 15, 2]);
+  assert.deepStrictEqual(S.totalStats(st), { done: 3, total: 151 });
 });
 t('hitung mundur SKD (default 8 Feb 2027)', () => {
   const st = S.newState();
@@ -251,11 +276,11 @@ t('hitung mundur SKD (default 8 Feb 2027)', () => {
 console.log('K8/K9 terlewat, libur, paket dobel, SKD');
 t('terlewat: belum selesai dan tanggal lewat; hilang bila digeser ke depan atau selesai', () => {
   const st = S.newState();
-  assert.deepStrictEqual(S.missed(st, '2026-11-25').map(x => x.id), ['T001', 'T002']);
-  S.moveTryout(st, 'T001', '2026-11-29');
+  assert.deepStrictEqual(S.missed(st, '2026-12-01').map(x => x.id), ['T001', 'T002']);
+  S.moveTryout(st, 'T001', '2026-12-06');
   S.setField(st, 'T002', { done: true });
-  assert.deepStrictEqual(S.missed(st, '2026-11-25'), []);
-  assert.strictEqual(S.statusOf(S.getTryout(st, 'T001'), '2026-11-25'), 'terjadwal');
+  assert.deepStrictEqual(S.missed(st, '2026-12-01'), []);
+  assert.strictEqual(S.statusOf(S.getTryout(st, 'T001'), '2026-12-01'), 'terjadwal');
 });
 t('paket dobel: huruf besar, spasi, tanda baca diabaikan', () => {
   const st = S.newState();
@@ -266,15 +291,6 @@ t('paket dobel: huruf besar, spasi, tanda baca diabaikan', () => {
   assert.strictEqual(d.length, 1); assert.deepStrictEqual(d[0].ids, ['T001', 'T002']);
   S.setField(st, 'T002', { name: 'Paket Bimbel C' });
   assert.strictEqual(S.duplicates(st).length, 0);
-});
-t('libur: tryout malam Jumat Natal terdeteksi; hilang bila digeser ke hari lain di minggu itu', () => {
-  const st = S.newState();
-  assert.strictEqual(S.holidayPending(st, '2026-12-20', 5).length, 1);   // Natal
-  assert.strictEqual(S.holidayPending(st, '2026-12-20', 14).length, 2);  // Natal + Tahun Baru
-  assert.strictEqual(S.holidayPending(st, '2026-12-26', 14).length, 1);  // tinggal Tahun Baru
-  const id = S.buildDay(st, '2026-12-25').tryouts[0];
-  S.moveTryout(st, id, '2026-12-26');
-  assert.strictEqual(S.holidayPending(st, '2026-12-20', 5).length, 0);
 });
 t('tryout pada/setelah tanggal SKD terdeteksi (SKD bawaan 8 Feb: 0; SKD 1 Feb: 2)', () => {
   const st = S.newState();
@@ -288,7 +304,7 @@ function fill(st, week, twk, tkp) { S.tryoutList(st).filter(x => x.week === week
 t('rata-rata per minggu', () => {
   const st = S.newState(); fill(st, 1, 60, 150);
   const a = S.weeklyAverages(st);
-  assert.strictEqual(a.length, 11);
+  assert.strictEqual(a.length, 10);
   assert.deepStrictEqual([a[0].twk, a[0].tiu, a[0].tkp, a[0].total], [60, 100, 150, 310]);
   assert.strictEqual(a[1].twk, null);
 });
@@ -341,11 +357,11 @@ t('impor menolak JSON rusak, berkas asing, versi lain, dan membersihkan data ber
   assert.strictEqual(S.parseImport('{"a":1}').ok, false);
   assert.strictEqual(S.parseImport('{"app":"tryout-skd","version":9,"data":{"tryouts":{}}}').ok, false);
   assert.strictEqual(S.parseImport('{"app":"tryout-skd","version":1,"data":{}}').ok, false);
-  const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { settings: { skdDate: 'ngawur', thr: { twk: 'x', tiu: 9999 } }, tryouts: { T001: { twk: 9999, date: '2030-01-01', done: 'ya' }, TXXX: { done: true }, T002: { date: '2026-12-01', done: true } }, wrong: [{ subtest: 'TWK', topic: 'a', note: 'b' }, 'x'], lessons: { ngawur: 'x', '2026-12-01': '  Pelajaran A  ', '2026-12-02': '   ', '2026-12-03': 123 } } }));
+  const r = S.parseImport(JSON.stringify({ app: 'tryout-skd', version: 1, data: { settings: { skdDate: 'ngawur', thr: { twk: 'x', tiu: 9999 } }, tryouts: { T001: { twk: 9999, date: '2030-01-01', done: 'ya' }, TXXX: { done: true }, T002: { date: '2026-12-08', done: true } }, wrong: [{ subtest: 'TWK', topic: 'a', note: 'b' }, 'x'], lessons: { ngawur: 'x', '2026-12-01': '  Pelajaran A  ', '2026-12-02': '   ', '2026-12-03': 123 } } }));
   assert.ok(r.ok);
   assert.strictEqual(r.state.settings.skdDate, '2027-02-08');
   assert.strictEqual(r.state.settings.thr.twk, 65); assert.strictEqual(r.state.settings.thr.tiu, 80);
-  assert.deepStrictEqual(r.state.tryouts, { T002: { done: true } }); // T002 minggu 1; 2026-12-01 minggu 2, jadi tanggal ditolak
+  assert.deepStrictEqual(r.state.tryouts, { T002: { done: true } }); // T002 minggu 1; 2026-12-08 minggu 2, jadi tanggal ditolak
   assert.deepStrictEqual(r.state.lessons, { '2026-12-01': 'Pelajaran A' }); // tanggal ngawur, teks kosong, dan bukan teks dibuang
   assert.strictEqual(r.state.wrong, undefined); // buku soal salah lama diabaikan
 });
@@ -361,22 +377,22 @@ t('WITA = UTC+8', () => {
   assert.deepStrictEqual(n, { date: '2026-11-24', sec: 19 * 3600 + 30 * 60 + 15 });
   assert.strictEqual(S.nowWita(Date.UTC(2026, 10, 24, 16, 0, 0)).date, '2026-11-25'); // 00.00 WITA
 });
-t('kegiatan berjalan dan berikutnya (Selasa 24 Nov 19.30 WITA)', () => {
+t('kegiatan berjalan dan berikutnya (Senin 30 Nov 19.30 WITA)', () => {
   const st = S.newState();
-  const r = S.statusNow(st, { date: '2026-11-24', sec: 19 * 3600 + 30 * 60 });
+  const r = S.statusNow(st, { date: '2026-11-30', sec: 19 * 3600 + 30 * 60 });
   assert.strictEqual(r.current.label, 'Tryout malam'); assert.strictEqual(r.next.kind, 'bahas');
   assert.strictEqual(r.nextIn, 80 * 60); // bahas mulai 20.50
 });
 t('siang: jeda, lewat tengah malam, sebelum program, dan setelah program', () => {
   const st = S.newState();
-  const gap = S.statusNow(st, { date: '2026-11-24', sec: 16 * 3600 }); // 16.00 di antara bahas siang dan tryout malam
+  const gap = S.statusNow(st, { date: '2026-11-30', sec: 16 * 3600 }); // 16.00 di antara bahas siang dan tryout malam
   assert.strictEqual(gap.current, null); assert.strictEqual(gap.next.label, 'Tryout malam'); assert.strictEqual(gap.nextIn, 3 * 3600);
-  const noon = S.statusNow(st, { date: '2026-11-24', sec: 13 * 3600 + 20 * 60 });
+  const noon = S.statusNow(st, { date: '2026-11-30', sec: 13 * 3600 + 20 * 60 });
   assert.strictEqual(noon.current.label, 'Tryout siang'); assert.strictEqual(noon.next.label, 'Pembahasan');
-  const late = S.statusNow(st, { date: '2026-11-24', sec: 23 * 3600 + 30 * 60 });
-  assert.strictEqual(late.current.kind, 'tidur'); assert.strictEqual(late.nextDate, '2026-11-25'); assert.strictEqual(late.next.label, 'Tryout siang');
+  const late = S.statusNow(st, { date: '2026-11-30', sec: 23 * 3600 + 30 * 60 });
+  assert.strictEqual(late.current.kind, 'tidur'); assert.strictEqual(late.nextDate, '2026-12-01'); assert.strictEqual(late.next.label, 'Tryout siang');
   const before = S.statusNow(st, { date: '2026-11-20', sec: 12 * 3600 });
-  assert.strictEqual(before.nextDate, '2026-11-23'); assert.strictEqual(before.next.kind, 'tidur'); // Senin 23 Nov belum ada tryout
+  assert.strictEqual(before.nextDate, '2026-11-30'); assert.strictEqual(before.next.label, 'Tryout siang'); // minggu belajar: tryout pertama Senin 30 Nov 13.15
   assert.strictEqual(S.statusNow(st, { date: '2027-03-20', sec: 10 * 3600 }).next, null);
 });
 

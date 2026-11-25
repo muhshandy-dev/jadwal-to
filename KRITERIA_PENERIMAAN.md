@@ -1,6 +1,6 @@
 # Kriteria penerimaan — Jadwal Tryout SKD
 
-> **Revisi 2026-11-24 (permintaan Shandy):** mulai Selasa 24 Nov 2026, 15 tryout per minggu (Sen–Kam 2 per hari, Jumat 1 malam, Sabtu 3, Minggu 3; sesi hanya siang 13.15, siang 2 16.00, malam 19.00) agar 150 tryout selesai sebelum SKD bawaan 8 Feb 2027. 11 minggu (13, 9×15, 2), tryout terakhir Senin 1 Feb 2027. Jumat 25 Des dan 1 Jan tetap punya 1 tryout malam (peringatan libur, bisa digeser dalam minggu yang sama). K1–K3 di bawah berlaku untuk jadwal ini.
+> **Revisi 2026-11-25 (permintaan Shandy):** mulai Senin 30 Nov 2026; hari biasa 15 tryout per minggu (Sen–Kam 2, Jumat 1 malam, Sabtu 3, Minggu 3; sesi siang 13.15, siang 2 16.00, malam 19.00); hari libur 4 tryout (tambah pagi 09.30): 24–27 Des, 1–3 Jan, 5 Jan. 151 tryout, 10 minggu (15, 15, 15, 22, 20, 17, 15, 15, 15, 2), terakhir Senin 1 Feb 2027, tenang 2–7 Feb. K1–K3 berlaku untuk jadwal ini.
 
 Ditulis sebelum coding. Setiap butir dibuktikan dengan tes nyata (lihat `BUKTI.md`).
 
@@ -11,13 +11,13 @@ buat akun SSCASN") dan 7 aturan tetap; keduanya ditampilkan sebagai catatan saja
 
 | # | Kriteria | Bukti yang diminta |
 |---|----------|--------------------|
-| K1 | Total tepat 150 tryout; tiap minggu 15 (minggu 1: 13, minggu 11: 2); ID unik; periode 23 Nov 2026 – 31 Jan 2027 (Senin–Minggu) | tes logika (Node) |
+| K1 | Total tepat 151 tryout; min. 15 per minggu (kecuali minggu penutup); ID unik; periode 30 Nov 2026 – 1 Feb 2027 | tes logika (Node) |
 | K2 | Templat harian: Sen–Kam siang 13.15 + malam 19.00; Jumat malam; Sabtu dan Minggu siang 13.15, siang 2 16.00, malam 19.00; Minggu baca ulang 22.00; jam persis | tes logika |
-| K3 | Jumat 25 Des 2026 dan Jumat 1 Jan 2027 ditandai libur dan tryoutnya bisa digeser ke hari lain di minggu yang sama; tidak bisa ke minggu lain; total tetap 150, tiap minggu tetap 15 | tes logika + tes browser |
+| K3 | Hari libur (Natal, Tahun Baru, Isra Mikraj) dipakai dengan 4 tryout; tryout bisa digeser ke hari lain di minggu yang sama; tidak bisa ke minggu lain; total tetap 151, tiap minggu tetap | tes logika + tes browser |
 | K4 | Hari Ini: timeline, sorot kegiatan berjalan, hitung mundur ke kegiatan berikutnya (zona WITA) | tes browser dengan jam palsu |
 | K5 | Checklist: selesai, nama paket, skor TWK/TIU/TKP, total otomatis, status pembahasan | tes browser |
 | K6 | Ambang lulus per subtes (default 65/80/166), bisa diubah | tes logika + browser |
-| K7 | Progres per minggu x/15 dan total x/150 dengan progress bar; hitung mundur hari ke SKD (default 8 Feb 2027, bisa diubah) | tes logika + browser |
+| K7 | Progres per minggu x/15 dan total x/151 dengan progress bar; hitung mundur hari ke SKD (default 8 Feb 2027, bisa diubah) | tes logika + browser |
 | K8 | Tryout terlewat memunculkan peringatan sampai digeser/diselesaikan | tes logika + browser |
 | K9 | Peringatan paket dobel (nama sama, tak peka huruf besar/spasi) | tes logika + browser |
 | K10 | Grafik tren TWK/TIU/TKP/total, rata-rata per minggu, peringatan "skor mentok" (TWK atau TKP tidak naik dua minggu berturut-turut) | tes logika + screenshot |

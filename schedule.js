@@ -7,16 +7,20 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  // Revisi 2026-11-24 (150 tryout): mulai Selasa 24 Nov 2026. Hanya sesi siang (13.15), siang 2 (16.00), malam (19.00).
-  // Senin-Kamis 2 (siang, malam), Jumat 1 (malam), Sabtu 3 dan Minggu 3 (siang, siang 2, malam) = 15 per minggu.
-  // 150 tryout selesai Senin 1 Feb 2027, sebelum SKD bawaan 8 Feb 2027. Minggu 1 dihitung dari Senin 23 Nov.
-  var START_DATE = '2026-11-23'; // Senin awal minggu 1
-  var FIRST_DATE = '2026-11-24'; // tryout pertama
-  var TOTAL = 150;
-  var PER_DAY = [2, 2, 2, 2, 1, 3, 3]; // Senin..Minggu
+  // Revisi 2026-11-25 (151 tryout): mulai Senin 30 Nov 2026 (minggu ini belajar dulu). Sesi: siang 13.15, siang 2 16.00, malam 19.00.
+  // Hari biasa: Senin-Kamis 2, Jumat 1, Sabtu 3, Minggu 3 = 15 per minggu. Hari libur (EXTRA_DAYS) 4 tryout: pagi 09.30 + tiga sesi di atas.
+  // 151 tryout selesai Senin 1 Feb 2027; 2-7 Feb tenang sebelum SKD bawaan 8 Feb 2027. Minggu 1 dimulai Senin 30 Nov.
+  var START_DATE = '2026-11-30'; // Senin awal minggu 1 = tryout pertama
+  var FIRST_DATE = '2026-11-30'; // tryout pertama
+  var TOTAL = 151;
+  var PER_DAY = [2, 2, 2, 2, 1, 3, 3]; // Senin..Minggu (hari biasa)
   var DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   var MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-  var HOLIDAYS = { '2026-12-25': 'Hari Raya Natal', '2027-01-01': 'Tahun Baru 2027' };
+  // Libur resmi (SKB 3 Menteri 2026 dan 2027) di sekitar program; dirujuk dari laporan berita, teks resmi belum dibuka langsung.
+  var HOLIDAYS = { '2026-12-24': 'Cuti bersama Natal', '2026-12-25': 'Hari Raya Natal', '2027-01-01': 'Tahun Baru 2027', '2027-01-05': 'Isra Mikraj' };
+  // Hari padat: libur resmi dan akhir pekan libur panjang (4 tryout per hari)
+  var EXTRA_DAYS = { '2026-12-24': 'Cuti bersama Natal', '2026-12-25': 'Hari Raya Natal', '2026-12-26': 'Libur panjang Natal', '2026-12-27': 'Libur panjang Natal', '2027-01-01': 'Tahun Baru 2027', '2027-01-02': 'Libur panjang Tahun Baru', '2027-01-03': 'Libur panjang Tahun Baru', '2027-01-05': 'Isra Mikraj' };
+  function dayNote(date) { return HOLIDAYS[date] || EXTRA_DAYS[date] || null; }
   var MAX = { twk: 150, tiu: 175, tkp: 225 };
   var MIN_PER_WEEK_FOR_TREND = 3;
   var UTC_OFFSET_H = 8; // WITA
@@ -40,7 +44,8 @@
     var out = [], n = 0, s0 = dayNum(START_DATE);
     for (var dn = dayNum(FIRST_DATE); n < TOTAL; dn++) {
       var d = ((dn + 3) % 7 + 7) % 7;
-      for (var k = 0; k < PER_DAY[d] && n < TOTAL; k++) {
+      var cnt = EXTRA_DAYS[dateStr(dn)] ? 4 : PER_DAY[d];
+      for (var k = 0; k < cnt && n < TOTAL; k++) {
         n++;
         out.push({ id: 'T' + (n < 100 ? (n < 10 ? '00' : '0') : '') + n, n: n, week: Math.floor((dn - s0) / 7) + 1, dayIdx: d, slot: k, date: dateStr(dn) });
       }
@@ -67,10 +72,11 @@
   function T(h, m) { return h * 60 + (m || 0); }
   function block(s) { return { to: [s, s + 100], bahas: [s + 105, s + 150] }; }
   function slot(name, a, b, c, d) { return { name: name, to: [a, b], bahas: [c, d] }; }
+  var PAGI = slot('pagi', T(9, 30), T(11, 10), T(11, 15), T(12));
   var SIANG = slot('siang', T(13, 15), T(14, 55), T(15), T(15, 45));
   var SIANG2 = slot('siang 2', T(16), T(17, 40), T(17, 45), T(18, 30));
   var MALAM = slot('malam', T(19), T(20, 40), T(20, 50), T(21, 50));
-  var SESSIONS = [SIANG, SIANG2, MALAM]; // sesi baku yang bisa dipilih saat menggeser
+  var SESSIONS = [PAGI, SIANG, SIANG2, MALAM]; // sesi baku yang bisa dipilih saat menggeser
   function slotAt(start) { for (var i = 0; i < SESSIONS.length; i++) if (SESSIONS[i].to[0] === start) return SESSIONS[i]; return null; }
   var TEMPLATES = {
     weekday: { // Senin-Kamis: 2 tryout (siang dan malam)
@@ -94,7 +100,11 @@
       extras: []
     }
   };
-  function templateFor(idx) { return idx < 4 ? TEMPLATES.weekday : idx === 4 ? TEMPLATES.friday : idx === 5 ? TEMPLATES.saturday : TEMPLATES.sunday; }
+  function templateFor(idx, date) {
+    var t = idx < 4 ? TEMPLATES.weekday : idx === 4 ? TEMPLATES.friday : idx === 5 ? TEMPLATES.saturday : TEMPLATES.sunday;
+    if (date && EXTRA_DAYS[date]) return { slots: [PAGI, SIANG, SIANG2, MALAM], fixed: t.fixed, extras: [] }; // hari libur: 4 tryout
+    return t;
+  }
 
   /* ---------- State ---------- */
   function newState() {
@@ -156,7 +166,7 @@
   /* ---------- Daftar tryout ---------- */
   // Sesi jadwal awal, mis. "siang 13.15"; selalu terisi (tidak pernah undefined).
   function baseSession(b) {
-    var tpl = templateFor(b.dayIdx), sl = tpl.slots[b.slot] || tpl.extras[b.slot - tpl.slots.length];
+    var tpl = templateFor(b.dayIdx, b.date), sl = tpl.slots[b.slot] || tpl.extras[b.slot - tpl.slots.length];
     return sl && sl.name ? sl.name + ' ' + fmtTime(sl.to[0]) : 'sesi ' + (b.slot + 1);
   }
   function tryoutList(state) {
@@ -284,10 +294,6 @@
   function missed(state, today) {
     return tryoutList(state).filter(function (t) { return !t.done && t.date < today; });
   }
-  function holidayPending(state, today, horizon) {
-    var end = addDays(today, horizon);
-    return tryoutList(state).filter(function (t) { return !t.done && HOLIDAYS[t.date] && t.date >= today && t.date <= end; });
-  }
   function afterSkd(state) {
     var skd = state.settings.skdDate;
     return tryoutList(state).filter(function (t) { return !t.done && t.date >= skd; });
@@ -318,10 +324,10 @@
   function buildDay(state, date, list) {
     list = list || tryoutList(state);
     var idx = dayIdx(date);
-    var info = { date: date, dayIdx: idx, holiday: HOLIDAYS[date] || null, phase: phaseOf(state, date), week: weekOf(date), events: [], tryouts: [] };
+    var info = { date: date, dayIdx: idx, holiday: dayNote(date), phase: phaseOf(state, date), week: weekOf(date), events: [], tryouts: [] };
     if (info.phase === 'program' && date >= state.settings.skdDate) info.afterSkd = true;
     if (info.phase !== 'program') return info;
-    var tpl = templateFor(idx);
+    var tpl = templateFor(idx, date);
     var mine = list.filter(function (t) { return t.date === date; });
     info.tryouts = mine.map(function (t) { return t.id; });
     var auto = mine.filter(function (t) { return t.start === null; });
@@ -409,7 +415,7 @@
 
   return {
     START_DATE: START_DATE, FIRST_DATE: FIRST_DATE, LAST_DATE: LAST_DATE, LAST_TRYOUT_DATE: LAST_TRYOUT_DATE, WEEKS: WEEKS, WEEK_COUNTS: WEEK_COUNTS, TOTAL: TOTAL, PER_DAY: PER_DAY,
-    DAY_NAMES: DAY_NAMES, MONTHS: MONTHS, HOLIDAYS: HOLIDAYS, MAX: MAX, SUBTESTS: SUBTESTS, LESSON_MAX: LESSON_MAX,
+    DAY_NAMES: DAY_NAMES, MONTHS: MONTHS, HOLIDAYS: HOLIDAYS, EXTRA_DAYS: EXTRA_DAYS, dayNote: dayNote, MAX: MAX, SUBTESTS: SUBTESTS, LESSON_MAX: LESSON_MAX,
     DEFAULT_SETTINGS: DEFAULT_SETTINGS, MIN_PER_WEEK_FOR_TREND: MIN_PER_WEEK_FOR_TREND,
     BASE: BASE, TEMPLATES: TEMPLATES,
     dayNum: dayNum, dateStr: dateStr, isDate: isDate, dayIdx: dayIdx, addDays: addDays, diffDays: diffDays,
@@ -417,7 +423,7 @@
     newState: newState, normalizeState: normalizeState, tryoutList: tryoutList, getTryout: getTryout,
     totalScore: totalScore, passInfo: passInfo, statusOf: statusOf, setField: setField, scheduleMap: scheduleMap, SESSIONS: SESSIONS, setLesson: setLesson, lessonDates: lessonDates, moveTryout: moveTryout, resetMove: resetMove,
     weekStats: weekStats, totalStats: totalStats, weeklyAverages: weeklyAverages, plateau: plateau,
-    normName: normName, duplicates: duplicates, missed: missed, holidayPending: holidayPending, afterSkd: afterSkd,
+    normName: normName, duplicates: duplicates, missed: missed, afterSkd: afterSkd,
     buildDay: buildDay, phaseOf: phaseOf, nowWita: nowWita, statusNow: statusNow, daysToSkd: daysToSkd,
     exportData: exportData, parseImport: parseImport
   };
